@@ -1,0 +1,5 @@
+<library path="main_panel">
+  <class type="drone_viz::MainPanel" base_class_type="rviz_common::Panel">
+    <description></description>
+  </class>
+</library>
