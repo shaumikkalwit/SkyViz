@@ -1,0 +1,3 @@
+[submodule "src/crazyswarm2"]
+	path = src/crazyswarm2
+	url = https://github.com/llanesc/crazyswarm2.git
