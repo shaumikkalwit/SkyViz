@@ -18,7 +18,7 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
 
     // // Connect the event of when the button is released to our callback,
     // // so pressing the button results in the buttonActivated callback being called.
-    // QObject::connect(teleop_button_, &QPushButton::released, this, &MainPanel::buttonActivated);
+    // QObject::connect (teleop_button_, &QPushButton::released, this, &MainPanel::buttonActivated);
 
     // // ----------- TELEOP VIEW -----------
     // teleop_widget_ = new QWidget();
@@ -74,9 +74,27 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
     QPushButton* land_button = new QPushButton("Land");
     teleop_layout->addWidget(land_button);
 
-    QPushButton* back_button = new QPushButton("Back");
-    teleop_layout->addWidget(back_button);
-    QObject::connect(back_button, &QPushButton::released, [this]() {
+    // Gamepad-style directional controls
+    auto* direction_layout = new QGridLayout();
+    QPushButton* forward_button = new QPushButton("Forward");
+    QPushButton* backward_button = new QPushButton("Backward");
+    QPushButton* left_button = new QPushButton("Left");
+    QPushButton* right_button = new QPushButton("Right");
+
+    direction_layout->addWidget(forward_button, 0, 1);  // Top center
+    direction_layout->addWidget(left_button, 1, 0);     // Middle left
+    direction_layout->addWidget(right_button, 1, 2);    // Middle right
+    direction_layout->addWidget(backward_button, 2, 1);     // Bottom center
+
+    // Optional: Add a container widget to make it tidy
+    QWidget* direction_widget = new QWidget();
+    direction_widget->setLayout(direction_layout);
+    teleop_layout->addWidget(direction_widget);
+
+    // Back button to return to main menu
+    QPushButton* return_button = new QPushButton("Back");
+    teleop_layout->addWidget(return_button);
+    QObject::connect(return_button, &QPushButton::released, [this]() {
         stacked_layout_->setCurrentWidget(main_widget_);
     });
 

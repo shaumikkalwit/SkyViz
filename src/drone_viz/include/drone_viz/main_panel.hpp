@@ -35,6 +35,11 @@ protected:
   QWidget* main_widget_;
   QWidget* teleop_widget_;
 
+  QPushButton* forward_button_;
+  QPushButton* backward_button_;
+  QPushButton* left_button_;
+  QPushButton* right_button_;
+
 
 private Q_SLOTS:
   void buttonActivated();
