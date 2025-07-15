@@ -1,78 +1,61 @@
 #include <drone_viz/main_panel.hpp>
 #include <QVBoxLayout>
 #include <rviz_common/display_context.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <std_srvs/srv/set_bool.hpp>
+// #include <rviz_common/ros_node_abstraction_iface.hpp>
+
 
 namespace  drone_viz
 {
 MainPanel::MainPanel(QWidget* parent) : Panel(parent)
 {
-    // main_widget_ = new QWidget();
-    // // Create a label and a button, displayed vertically (the V in VBox means vertical)
-    // auto* main_layout = new QVBoxLayout(this);
-    // // Create a button and a label for the button
-    // label_ = new QLabel("[no data]");
-    // teleop_button_ = new QPushButton("GO!");
-    // // Add those elements to the GUI layout
-    // main_layout->addWidget(label_);
-    // main_layout->addWidget(teleop_button_);
-
-    // // Connect the event of when the button is released to our callback,
-    // // so pressing the button results in the buttonActivated callback being called.
-    // QObject::connect (teleop_button_, &QPushButton::released, this, &MainPanel::buttonActivated);
-
-    // // ----------- TELEOP VIEW -----------
-    // teleop_widget_ = new QWidget();
-    // auto* teleop_layout = new QVBoxLayout(teleop_widget_);
-    // teleop_layout->addWidget(new QLabel("Teleoperation Mode"));
-
-    // QPushButton* arm_button = new QPushButton("Arm");
-    // teleop_layout->addWidget(arm_button);
-
-    // QPushButton* takeoff_button = new QPushButton("Takeoff");
-    // teleop_layout->addWidget(takeoff_button);
-
-    // QPushButton* land_button = new QPushButton("Land");
-    // teleop_layout->addWidget(land_button);
-
-    // QPushButton* back_button = new QPushButton("Back");
-    // teleop_layout->addWidget(back_button);
-    // QObject::connect(back_button, &QPushButton::released, [this]() {
-    //     stacked_layout_->setCurrentWidget(main_widget_);
-    // });
-
-    // // ----------- STACK LAYOUT SETUP -----------
-    // stacked_layout_ = new QStackedLayout();
-    // stacked_layout_->addWidget(main_widget_);
-    // stacked_layout_->addWidget(teleop_widget_);
-    // stacked_layout_->setCurrentWidget(main_widget_);
-
-    // // if (this->layout())
-    // // {
-    // //     delete this->layout();  // Remove old layout before setting new one
-    // // }
-    // setLayout(stacked_layout_);
-    // Create the main widget and set its layout
     main_widget_ = new QWidget();
     auto* main_layout = new QVBoxLayout(main_widget_);  // layout for main_widget_
     label_ = new QLabel("[no data]");
+    autonomous_button_ = new QPushButton("Autonomous Control");
     teleop_button_ = new QPushButton("Teleoperation Control");
     main_layout->addWidget(label_);
+    main_layout->addWidget(autonomous_button_);
     main_layout->addWidget(teleop_button_);
-    QObject::connect(teleop_button_, &QPushButton::released, this, &MainPanel::buttonActivated);
+
+    QObject::connect(autonomous_button_, &QPushButton::released, this, &MainPanel::autonomousButtonActivated);
+    QObject::connect(teleop_button_, &QPushButton::released, this, &MainPanel::teleopButtonActivated);
+
+    rclcpp::Node::SharedPtr node_;
+    rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr arm_client_;
+
+    // Create the autonomous widget and its layout
+    autonomous_widget_ = new QWidget();
+    auto* autonomous_layout = new QVBoxLayout(autonomous_widget_);
+    autonomous_layout->addWidget(new QLabel("Autonomous Mode"));
+
+    // --- Autonomous mode buttons ---
+    QPushButton* autonomous_arm_button = new QPushButton("Arm");
+    QPushButton* autonomous_takeoff_button = new QPushButton("Takeoff");
+    QPushButton* autonomous_land_button = new QPushButton("Land");
+
+    autonomous_layout->addWidget(autonomous_arm_button);
+    autonomous_layout->addWidget(autonomous_takeoff_button);
+    autonomous_layout->addWidget(autonomous_land_button);
 
     // Create the teleop widget and set its layout
     teleop_widget_ = new QWidget();
     auto* teleop_layout = new QVBoxLayout(teleop_widget_);
     teleop_layout->addWidget(new QLabel("Teleoperation Mode"));
 
-    QPushButton* arm_button = new QPushButton("Arm");
-    teleop_layout->addWidget(arm_button);
+    // --- Teleop mode buttons ---
+    QPushButton* teleop_arm_button = new QPushButton("Arm");
+    QPushButton* teleop_takeoff_button = new QPushButton("Takeoff");
+    QPushButton* teleop_land_button = new QPushButton("Land");
 
-    QPushButton* takeoff_button = new QPushButton("Takeoff");
-    teleop_layout->addWidget(takeoff_button);
+    teleop_layout->addWidget(teleop_arm_button);
+    teleop_layout->addWidget(teleop_takeoff_button);
+    teleop_layout->addWidget(teleop_land_button);
 
-    QPushButton* land_button = new QPushButton("Land");
-    teleop_layout->addWidget(land_button);
+    // // --- Connect both arm buttons ---
+    // QObject::connect(autonomous_arm_button, &QPushButton::released, this, &MainPanel::armButtonPressed);
+    // QObject::connect(teleop_arm_button, &QPushButton::released, this, &MainPanel::armButtonPressed);
 
     // Gamepad-style directional controls
     auto* direction_layout = new QGridLayout();
@@ -91,10 +74,17 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
     direction_widget->setLayout(direction_layout);
     teleop_layout->addWidget(direction_widget);
 
-    // Back button to return to main menu
-    QPushButton* return_button = new QPushButton("Back");
-    teleop_layout->addWidget(return_button);
-    QObject::connect(return_button, &QPushButton::released, [this]() {
+    // Teleop back button
+    QPushButton* teleop_back_button = new QPushButton("Back");
+    teleop_layout->addWidget(teleop_back_button);
+    QObject::connect(teleop_back_button, &QPushButton::released, [this]() {
+        stacked_layout_->setCurrentWidget(main_widget_);
+    });
+
+    // Autonomous back button
+    QPushButton* autonomous_back_button = new QPushButton("Back");
+    autonomous_layout->addWidget(autonomous_back_button);
+    QObject::connect(autonomous_back_button, &QPushButton::released, [this]() {
         stacked_layout_->setCurrentWidget(main_widget_);
     });
 
@@ -102,6 +92,7 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
     stacked_layout_ = new QStackedLayout(this);  // Set this as parent
     stacked_layout_->addWidget(main_widget_);
     stacked_layout_->addWidget(teleop_widget_);
+    stacked_layout_->addWidget(autonomous_widget_);
 
     // Set the stacked layout as the panel's layout
     setLayout(stacked_layout_);
@@ -114,13 +105,15 @@ MainPanel::~MainPanel() = default;
 
 void MainPanel::onInitialize()
 {
-  // // Access the abstract ROS Node and
-  // // in the process lock it for exclusive use until the method is done.
-  // node_ptr_ = getDisplayContext()->getRosNodeAbstraction().lock();
+  // Access the abstract ROS Node and
+  // in the process lock it for exclusive use until the method is done.
+  node_ptr_ = getDisplayContext()->getRosNodeAbstraction().lock();
 
-  // // Get a pointer to the familiar rclcpp::Node for making subscriptions/publishers
-  // // (as per normal rclcpp code)gi
-  // rclcpp::Node::SharedPtr node = node_ptr_->get_raw_node();
+  // Get a pointer to the familiar rclcpp::Node for making subscriptions/publishers
+  // (as per normal rclcpp code)gi
+  rclcpp::Node::SharedPtr node = node_ptr_->get_raw_node();
+
+  arm_client_ = node->create_client<std_srvs::srv::SetBool>("/arm");
 
   // // Create a String publisher for the output
   // publisher_ = node->create_publisher<std_msgs::msg::String>("/output", 10);
@@ -138,13 +131,50 @@ void MainPanel::onInitialize()
 
 // When the widget's button is pressed, this callback is triggered,
 // and then we publish a new message on our topic.
-void MainPanel::buttonActivated()
+void MainPanel::teleopButtonActivated()
 {
-  // auto message = std_msgs::msg::String();
-  // message.data = "Button clicked!";
-  // publisher_->publish(message);
+    // auto message = std_msgs::msg::String();
+    // message.data = "Button clicked!";
+    // publisher_->publish(message);
 
-  stacked_layout_->setCurrentWidget(teleop_widget_);
+    stacked_layout_->setCurrentWidget(teleop_widget_);
+}
+
+void MainPanel::autonomousButtonActivated()
+{
+    // auto message = std_msgs::msg::String();
+    // message.data = "Button clicked!";
+    // publisher_->publish(message);
+
+    stacked_layout_->setCurrentWidget(autonomous_widget_);
+        
+    // Load and activate custom tool
+    auto* tool_manager = getDisplayContext()->getToolManager();
+    tool_index_ = tool_manager->addTool("drone_viz::WaypointTool");
+    tool_ptr_ = tool_manager->getTool(tool_index_);
+    tool_manager->setCurrentTool(tool_ptr_);
+}
+
+void MainPanel::armButtonPressed()
+{
+    if (!arm_client_ || !arm_client_->wait_for_service(std::chrono::seconds(1))) {
+            RCLCPP_WARN(node->get_logger(), "Arm service not available");
+            return;
+        }
+
+        auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+        request->data = true;
+
+        auto future = arm_client_->async_send_request(request,
+            [this](rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture result) {
+                auto response = result.get();
+                if (response->success) {
+                    RCLCPP_INFO(node->get_logger(), "Drone armed: %s", response->message.c_str());
+                } else {
+                    RCLCPP_WARN(node->get_logger(), "Failed to arm: %s", response->message.c_str());
+                }
+            }
+        );
 }
 
 }  // namespace drone_viz
