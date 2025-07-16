@@ -148,11 +148,11 @@ void MainPanel::autonomousButtonActivated()
 
     stacked_layout_->setCurrentWidget(autonomous_widget_);
         
-    // Load and activate custom tool
-    auto* tool_manager = getDisplayContext()->getToolManager();
-    tool_index_ = tool_manager->addTool("drone_viz::WaypointTool");
-    tool_ptr_ = tool_manager->getTool(tool_index_);
-    tool_manager->setCurrentTool(tool_ptr_);
+    // // Load and activate custom tool
+    // auto* tool_manager = getDisplayContext()->getToolManager();
+    // tool_index_ = tool_manager->addTool("drone_viz::WaypointTool");
+    // tool_ptr_ = tool_manager->getTool(tool_index_);
+    // tool_manager->setCurrentTool(tool_ptr_);
 }
 
 void MainPanel::armButtonPressed()

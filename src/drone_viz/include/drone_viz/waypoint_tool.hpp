@@ -3,7 +3,6 @@
 #include <rviz_common/tool.hpp>
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <visualization_msgs/msg/marker.hpp>
 #include <rviz_rendering/render_window.hpp>
 
 namespace drone_viz

@@ -1,0 +1,8 @@
+mocap_drone_interface/library/NatNetClient.py
+mocap_drone_interface/library/DataDescriptions.py
+mocap_drone_interface/library/MoCapData.py
+mocap_drone_interface/logs/
+mocap_drone_interface/ros2tests/
+mocap_drone_interface/cache/
+mocap_drone_interface/__pycache__/
+mocap_drone_interface/library/__pycache__/

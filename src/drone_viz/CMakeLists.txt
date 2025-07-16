@@ -17,7 +17,7 @@ qt5_wrap_cpp(MOC_FILES
 )
 
 add_library(main_panel src/main_panel.cpp 
-  waypoint_tool src/waypoint_tool.cpp
+  src/waypoint_tool.cpp
   ${MOC_FILES})
 target_include_directories(main_panel PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -30,7 +30,6 @@ ament_target_dependencies(main_panel
   rclcpp
   rviz_common
   rviz_rendering
-  visualization_msgs
   geometry_msgs
 )
 install(TARGETS main_panel
