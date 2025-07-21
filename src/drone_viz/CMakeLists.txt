@@ -10,6 +10,7 @@ find_package(ament_cmake_ros REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rviz_common REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
 qt5_wrap_cpp(MOC_FILES
@@ -62,5 +63,24 @@ install(FILES rviz_common_plugins.xml
 ament_export_include_directories(include)
 ament_export_targets(export_${PROJECT_NAME})
 pluginlib_export_plugin_description_file(rviz_common rviz_common_plugins.xml)
+
+add_executable(clicked_point_marker
+  src/clicked_point_marker.cpp
+)
+
+ament_target_dependencies(clicked_point_marker
+  rclcpp
+  geometry_msgs
+  visualization_msgs
+)
+
+target_include_directories(clicked_point_marker PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+install(TARGETS clicked_point_marker
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 ament_package()

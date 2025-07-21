@@ -5,7 +5,7 @@
   <link name="arena">
     <visual>
       <geometry>
-        <box size="5.4864 6.7056 3.048"/>
+        <box size="6.7056 5.4864 2.7432"/>
       </geometry>
       <material name="transparent">
         <color rgba="0 0 1 0.1"/>
@@ -20,7 +20,7 @@
   <joint name="base_to_arena" type="fixed">
     <parent link="arena"/>
     <child link="base_link"/>
-    <origin xyz="0 0 -1.524" rpy="0 0 0"/>
+    <origin xyz="0 0 -1.3716" rpy="0 0 0"/>
   </joint>
 
 </robot>
