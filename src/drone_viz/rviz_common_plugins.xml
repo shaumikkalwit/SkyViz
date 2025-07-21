@@ -2,10 +2,10 @@
   <class type="drone_viz::MainPanel" base_class_type="rviz_common::Panel">
     <description></description>
   </class>
-
-  <!-- WaypointTool Plugin -->
-  <class type="drone_viz::WaypointTool"
-         base_class_type="rviz_common::Tool">
-    <description>Click in RViz to set a waypoint for autonomous drone flight</description>
-  </class>
 </library>
+<!-- 
+<library path="waypoint_tool">
+  <class name="drone_viz::WaypointTool" type="drone_viz::WaypointTool" base_class_type="rviz_common::Tool">
+    <description>Waypoint Tool</description>
+  </class>
+</library> -->

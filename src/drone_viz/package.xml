@@ -13,7 +13,7 @@
   <depend>rviz_common</depend>
   <exec_depend>rclpy</exec_depend>
   <depend>std_srvs</depend>
-
+  <depend>visualization_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

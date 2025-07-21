@@ -17,7 +17,6 @@ qt5_wrap_cpp(MOC_FILES
 )
 
 add_library(main_panel src/main_panel.cpp 
-  src/waypoint_tool.cpp
   ${MOC_FILES})
 target_include_directories(main_panel PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -32,6 +31,7 @@ ament_target_dependencies(main_panel
   rviz_rendering
   geometry_msgs
 )
+
 install(TARGETS main_panel
         EXPORT export_drone_viz
         ARCHIVE DESTINATION lib
@@ -44,8 +44,6 @@ install(DIRECTORY include/
 install(FILES rviz_common_plugins.xml
         DESTINATION share/${PROJECT_NAME}
 )
-install(PROGRAMS scripts/dummy_arm_service.py
-        DESTINATION lib/${PROJECT_NAME})
 # install(FILES icons/classes/DemoPanel.png
 #         DESTINATION share/${PROJECT_NAME}/icons/classes
 # )
