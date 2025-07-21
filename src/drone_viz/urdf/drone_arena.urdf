@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<robot name="drone_arena">
+
+  <!-- Arena volume box (visual only) -->
+  <link name="arena">
+    <visual>
+      <geometry>
+        <box size="5.4864 6.7056 3.048"/>
+      </geometry>
+      <material name="transparent">
+        <color rgba="0 0 1 0.1"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- Dummy link representing drone starting point -->
+  <link name="base_link"/>
+
+  <!-- Fixed joint to place base_link at center of arena -->
+  <joint name="base_to_arena" type="fixed">
+    <parent link="arena"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 -1.524" rpy="0 0 0"/>
+  </joint>
+
+</robot>

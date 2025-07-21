@@ -47,6 +47,12 @@ install(TARGETS ${PROJECT_NAME}
 install(DIRECTORY include/
         DESTINATION include
 )
+install(DIRECTORY urdf
+  DESTINATION share/${PROJECT_NAME}
+)
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+)
 install(FILES rviz_common_plugins.xml
         DESTINATION share/${PROJECT_NAME}
 )
