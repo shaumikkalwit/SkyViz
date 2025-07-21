@@ -14,15 +14,19 @@ find_package(std_srvs REQUIRED)
 set(CMAKE_AUTOMOC ON)
 qt5_wrap_cpp(MOC_FILES
   include/drone_viz/main_panel.hpp
+  include/drone_viz/waypoint_tool.hpp
 )
 
-add_library(main_panel src/main_panel.cpp 
+add_library(${PROJECT_NAME} SHARED
+  src/main_panel.cpp 
+  src/waypoint_tool.cpp
   ${MOC_FILES})
-target_include_directories(main_panel PUBLIC
+
+target_include_directories(${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
-ament_target_dependencies(main_panel
+ament_target_dependencies(${PROJECT_NAME}
   pluginlib
   rviz_common
   std_srvs
@@ -32,8 +36,10 @@ ament_target_dependencies(main_panel
   geometry_msgs
 )
 
-install(TARGETS main_panel
-        EXPORT export_drone_viz
+target_link_libraries(${PROJECT_NAME} Qt5::Widgets)
+
+install(TARGETS ${PROJECT_NAME}
+        EXPORT export_${PROJECT_NAME}
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         RUNTIME DESTINATION bin
@@ -48,7 +54,7 @@ install(FILES rviz_common_plugins.xml
 #         DESTINATION share/${PROJECT_NAME}/icons/classes
 # )
 ament_export_include_directories(include)
-ament_export_targets(export_drone_viz)
+ament_export_targets(export_${PROJECT_NAME})
 pluginlib_export_plugin_description_file(rviz_common rviz_common_plugins.xml)
 
 ament_package()
