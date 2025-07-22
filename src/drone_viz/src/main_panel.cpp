@@ -3,6 +3,10 @@
 #include <rviz_common/display_context.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_srvs/srv/set_bool.hpp>
+
+#include <rviz_common/tool_manager.hpp>
+#include <rviz_common/tool.hpp>
+
 // #include <rviz_common/ros_node_abstraction_iface.hpp>
 
 
@@ -147,12 +151,6 @@ void MainPanel::autonomousButtonActivated()
     // publisher_->publish(message);
 
     stacked_layout_->setCurrentWidget(autonomous_widget_);
-        
-    // // Load and activate custom tool
-    // auto* tool_manager = getDisplayContext()->getToolManager();
-    // tool_index_ = tool_manager->addTool("drone_viz::WaypointTool");
-    // tool_ptr_ = tool_manager->getTool(tool_index_);
-    // tool_manager->setCurrentTool(tool_ptr_);
 }
 
 void MainPanel::armButtonPressed()
