@@ -25,9 +25,9 @@ void ClickedPointMarker::point_callback(const geometry_msgs::msg::PointStamped::
   marker.pose.position = msg->point;
   marker.pose.orientation.w = 1.0;
 
-  marker.scale.x = 10.0;  // 10 meters radius
-  marker.scale.y = 10.0;
-  marker.scale.z = 10.0;
+  marker.scale.x = 0.05;
+  marker.scale.y = 0.05;
+  marker.scale.z = 0.05;
 
   marker.color.r = 1.0f;
   marker.color.g = 0.0f;
