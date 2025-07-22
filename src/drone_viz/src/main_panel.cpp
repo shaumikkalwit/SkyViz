@@ -6,6 +6,7 @@
 
 #include <rviz_common/tool_manager.hpp>
 #include <rviz_common/tool.hpp>
+#include <drone_viz/clicked_point_marker.hpp>
 
 // #include <rviz_common/ros_node_abstraction_iface.hpp>
 
@@ -38,10 +39,12 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
     QPushButton* autonomous_arm_button = new QPushButton("Arm");
     QPushButton* autonomous_takeoff_button = new QPushButton("Takeoff");
     QPushButton* autonomous_land_button = new QPushButton("Land");
+    QPushButton* undo_button = new QPushButton("Undo");
 
     autonomous_layout->addWidget(autonomous_arm_button);
     autonomous_layout->addWidget(autonomous_takeoff_button);
     autonomous_layout->addWidget(autonomous_land_button);
+    autonomous_layout->addWidget(undo_button);
 
     // Create the teleop widget and set its layout
     teleop_widget_ = new QWidget();
@@ -92,6 +95,10 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
         stacked_layout_->setCurrentWidget(main_widget_);
     });
 
+    QObject::connect(undo_button, &QPushButton::released, this, &MainPanel::undoButtonPressed);
+
+    clicked_point_marker_node_ = std::make_shared<ClickedPointMarker>();
+
     // Create the stacked layout and add the two widgets
     stacked_layout_ = new QStackedLayout(this);  // Set this as parent
     stacked_layout_->addWidget(main_widget_);
@@ -116,8 +123,6 @@ void MainPanel::onInitialize()
   // Get a pointer to the familiar rclcpp::Node for making subscriptions/publishers
   // (as per normal rclcpp code)gi
   rclcpp::Node::SharedPtr node = node_ptr_->get_raw_node();
-
-  arm_client_ = node->create_client<std_srvs::srv::SetBool>("/arm");
 
   // // Create a String publisher for the output
   // publisher_ = node->create_publisher<std_msgs::msg::String>("/output", 10);
@@ -153,27 +158,36 @@ void MainPanel::autonomousButtonActivated()
     stacked_layout_->setCurrentWidget(autonomous_widget_);
 }
 
-void MainPanel::armButtonPressed()
+void MainPanel::undoButtonPressed()
 {
-    if (!arm_client_ || !arm_client_->wait_for_service(std::chrono::seconds(1))) {
-            RCLCPP_WARN(node->get_logger(), "Arm service not available");
-            return;
-        }
-
-        auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
-        request->data = true;
-
-        auto future = arm_client_->async_send_request(request,
-            [this](rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture result) {
-                auto response = result.get();
-                if (response->success) {
-                    RCLCPP_INFO(node->get_logger(), "Drone armed: %s", response->message.c_str());
-                } else {
-                    RCLCPP_WARN(node->get_logger(), "Failed to arm: %s", response->message.c_str());
-                }
-            }
-        );
+    // Call the undo function in your ClickedPointMarker node
+    if (clicked_point_marker_node_)
+    {
+        clicked_point_marker_node_->undo_last_marker();
+    }
 }
+
+// void MainPanel::armButtonPressed()
+// {
+//     if (!arm_client_ || !arm_client_->wait_for_service(std::chrono::seconds(1))) {
+//             RCLCPP_WARN(node->get_logger(), "Arm service not available");
+//             return;
+//         }
+
+//         auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+//         request->data = true;
+
+//         auto future = arm_client_->async_send_request(request,
+//             [this](rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture result) {
+//                 auto response = result.get();
+//                 if (response->success) {
+//                     RCLCPP_INFO(node->get_logger(), "Drone armed: %s", response->message.c_str());
+//                 } else {
+//                     RCLCPP_WARN(node->get_logger(), "Failed to arm: %s", response->message.c_str());
+//                 }
+//             }
+//         );
+// }
 
 }  // namespace drone_viz
 
