@@ -20,6 +20,7 @@ qt5_wrap_cpp(MOC_FILES
 
 add_library(${PROJECT_NAME} SHARED
   src/main_panel.cpp 
+  src/clicked_point_marker.cpp
   src/waypoint_tool.cpp
   ${MOC_FILES})
 
@@ -35,6 +36,7 @@ ament_target_dependencies(${PROJECT_NAME}
   rviz_common
   rviz_rendering
   geometry_msgs
+  visualization_msgs
 )
 
 target_link_libraries(${PROJECT_NAME} Qt5::Widgets)
@@ -72,6 +74,7 @@ ament_target_dependencies(clicked_point_marker
   rclcpp
   geometry_msgs
   visualization_msgs
+  std_srvs
 )
 
 target_include_directories(clicked_point_marker PUBLIC

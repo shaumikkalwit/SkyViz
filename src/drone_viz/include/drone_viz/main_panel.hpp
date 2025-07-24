@@ -12,6 +12,9 @@
 #include <rclcpp/rclcpp.hpp>
 #include <std_srvs/srv/set_bool.hpp>
 
+#include <drone_viz/clicked_point_marker.hpp>
+
+
 namespace drone_viz
 {
 class MainPanel
@@ -49,13 +52,16 @@ protected:
   std::shared_ptr<rviz_common::ros_integration::RosNodeAbstractionIface> node_ptr_;
   rclcpp::Node::SharedPtr node;
 
-  // Service client for arming
-  rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr arm_client_;
+  std::shared_ptr<ClickedPointMarker> clicked_point_marker_node_;
+
+private:
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr undo_client_;
 
 private Q_SLOTS:
   void teleopButtonActivated();
   void autonomousButtonActivated();
   void armButtonPressed();
+  void undoButtonPressed();
 };
 }  // namespace drone_viz
 

@@ -9,6 +9,11 @@ ClickedPointMarker::ClickedPointMarker()
   );
 
   marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("visualization_marker", 10);
+
+  undo_service_ = this->create_service<std_srvs::srv::Trigger>(
+    "undo_marker",
+    std::bind(&ClickedPointMarker::handle_undo_request, this, std::placeholders::_1, std::placeholders::_2)
+  );
 }
 
 void ClickedPointMarker::point_callback(const geometry_msgs::msg::PointStamped::SharedPtr msg)
@@ -39,7 +44,43 @@ void ClickedPointMarker::point_callback(const geometry_msgs::msg::PointStamped::
   marker.lifetime = rclcpp::Duration::from_seconds(0);  // 0 = forever
 
   marker_pub_->publish(marker);
+
+  // Store marker ID for possible undo
+  marker_id_history_.push_back(marker.id);
 }
+
+void ClickedPointMarker::undo_last_marker()
+{
+  if (!marker_id_history_.empty()) {
+    // Get the last marker ID
+    int last_marker_id = marker_id_history_.back();
+    marker_id_history_.pop_back();
+
+    auto delete_marker = visualization_msgs::msg::Marker();
+    delete_marker.header.frame_id = "base_link";
+    delete_marker.header.stamp = this->now();
+    delete_marker.ns = "clicked_points";
+    delete_marker.id = last_marker_id;
+    delete_marker.action = visualization_msgs::msg::Marker::DELETE;
+
+    marker_pub_->publish(delete_marker);
+  }
+}
+
+void ClickedPointMarker::handle_undo_request(
+  const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
+  std::shared_ptr<std_srvs::srv::Trigger::Response> response)
+{
+  if (!marker_id_history_.empty()) {
+    undo_last_marker();
+    response->success = true;
+    response->message = "Last marker undone.";
+  } else {
+    response->success = false;
+    response->message = "No marker to undo.";
+  }
+}
+
 
 int main(int argc, char** argv)
 {
