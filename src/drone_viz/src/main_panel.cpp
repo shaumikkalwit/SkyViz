@@ -123,6 +123,8 @@ void MainPanel::onInitialize()
   // Get a pointer to the familiar rclcpp::Node for making subscriptions/publishers
   // (as per normal rclcpp code)gi
   rclcpp::Node::SharedPtr node = node_ptr_->get_raw_node();
+  undo_client_ = node->create_client<std_srvs::srv::Trigger>("undo_marker");
+
 
   // // Create a String publisher for the output
   // publisher_ = node->create_publisher<std_msgs::msg::String>("/output", 10);
@@ -160,12 +162,25 @@ void MainPanel::autonomousButtonActivated()
 
 void MainPanel::undoButtonPressed()
 {
-    // Call the undo function in your ClickedPointMarker node
-    if (clicked_point_marker_node_)
-    {
-        clicked_point_marker_node_->undo_last_marker();
+  if (!undo_client_ || !undo_client_->wait_for_service(std::chrono::seconds(1))) {
+    RCLCPP_WARN(node_ptr_->get_raw_node()->get_logger(), "Undo service not available");
+    return;
+  }
+
+  auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+
+  auto future = undo_client_->async_send_request(request,
+    [this](rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture result) {
+      auto response = result.get();
+      if (response->success) {
+        RCLCPP_INFO(node_ptr_->get_raw_node()->get_logger(), "Undo successful: %s", response->message.c_str());
+      } else {
+        RCLCPP_WARN(node_ptr_->get_raw_node()->get_logger(), "Undo failed: %s", response->message.c_str());
+      }
     }
+  );
 }
+
 
 // void MainPanel::armButtonPressed()
 // {

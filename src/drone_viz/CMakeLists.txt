@@ -74,6 +74,7 @@ ament_target_dependencies(clicked_point_marker
   rclcpp
   geometry_msgs
   visualization_msgs
+  std_srvs
 )
 
 target_include_directories(clicked_point_marker PUBLIC

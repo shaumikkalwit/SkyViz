@@ -9,6 +9,11 @@ ClickedPointMarker::ClickedPointMarker()
   );
 
   marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("visualization_marker", 10);
+
+  undo_service_ = this->create_service<std_srvs::srv::Trigger>(
+    "undo_marker",
+    std::bind(&ClickedPointMarker::handle_undo_request, this, std::placeholders::_1, std::placeholders::_2)
+  );
 }
 
 void ClickedPointMarker::point_callback(const geometry_msgs::msg::PointStamped::SharedPtr msg)
@@ -61,6 +66,21 @@ void ClickedPointMarker::undo_last_marker()
     marker_pub_->publish(delete_marker);
   }
 }
+
+void ClickedPointMarker::handle_undo_request(
+  const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
+  std::shared_ptr<std_srvs::srv::Trigger::Response> response)
+{
+  if (!marker_id_history_.empty()) {
+    undo_last_marker();
+    response->success = true;
+    response->message = "Last marker undone.";
+  } else {
+    response->success = false;
+    response->message = "No marker to undo.";
+  }
+}
+
 
 int main(int argc, char** argv)
 {

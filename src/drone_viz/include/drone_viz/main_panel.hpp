@@ -54,6 +54,9 @@ protected:
 
   std::shared_ptr<ClickedPointMarker> clicked_point_marker_node_;
 
+private:
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr undo_client_;
+
 private Q_SLOTS:
   void teleopButtonActivated();
   void autonomousButtonActivated();
