@@ -58,6 +58,7 @@ private:
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr undo_client_;
 
 private Q_SLOTS:
+  void confirmButtonPressed();
   void teleopButtonActivated();
   void autonomousButtonActivated();
   void armButtonPressed();

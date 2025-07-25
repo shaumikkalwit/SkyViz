@@ -38,13 +38,15 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
     // --- Autonomous mode buttons ---
     QPushButton* autonomous_arm_button = new QPushButton("Arm");
     QPushButton* autonomous_takeoff_button = new QPushButton("Takeoff");
-    QPushButton* autonomous_land_button = new QPushButton("Land");
+    QPushButton* confirm_button = new QPushButton("Confirm");
     QPushButton* undo_button = new QPushButton("Undo");
+    QPushButton* autonomous_land_button = new QPushButton("Land");
 
     autonomous_layout->addWidget(autonomous_arm_button);
     autonomous_layout->addWidget(autonomous_takeoff_button);
-    autonomous_layout->addWidget(autonomous_land_button);
+    autonomous_layout->addWidget(confirm_button);
     autonomous_layout->addWidget(undo_button);
+    autonomous_layout->addWidget(autonomous_land_button);
 
     // Create the teleop widget and set its layout
     teleop_widget_ = new QWidget();
@@ -95,9 +97,9 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
         stacked_layout_->setCurrentWidget(main_widget_);
     });
 
-    QObject::connect(undo_button, &QPushButton::released, this, &MainPanel::undoButtonPressed);
+    QObject::connect(confirm_button, &QPushButton::released, this, &MainPanel::confirmButtonPressed);
 
-    clicked_point_marker_node_ = std::make_shared<ClickedPointMarker>();
+    QObject::connect(undo_button, &QPushButton::released, this, &MainPanel::undoButtonPressed);
 
     // Create the stacked layout and add the two widgets
     stacked_layout_ = new QStackedLayout(this);  // Set this as parent
@@ -122,8 +124,10 @@ void MainPanel::onInitialize()
 
   // Get a pointer to the familiar rclcpp::Node for making subscriptions/publishers
   // (as per normal rclcpp code)gi
-  rclcpp::Node::SharedPtr node = node_ptr_->get_raw_node();
+  node = node_ptr_->get_raw_node();
   undo_client_ = node->create_client<std_srvs::srv::Trigger>("undo_marker");
+
+  clicked_point_marker_node_ = std::make_shared<ClickedPointMarker>();
 
 
   // // Create a String publisher for the output
@@ -159,6 +163,29 @@ void MainPanel::autonomousButtonActivated()
 
     stacked_layout_->setCurrentWidget(autonomous_widget_);
 }
+
+void MainPanel::confirmButtonPressed()
+{
+  auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+  auto client = node->create_client<std_srvs::srv::Trigger>("get_last_point");
+
+  if (!client->wait_for_service(std::chrono::seconds(1))) {
+    RCLCPP_ERROR(node->get_logger(), "Service not available");
+    return;
+  }
+
+  auto future = client->async_send_request(request,
+    [this](rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture result)
+    {
+      auto res = result.get();
+      if (res->success) {
+        RCLCPP_INFO(node->get_logger(), "Confirming point: %s", res->message.c_str());
+      } else {
+        RCLCPP_WARN(node->get_logger(), "No point clicked. Cannot confirm.");
+      }
+    });
+}
+
 
 void MainPanel::undoButtonPressed()
 {

@@ -18,6 +18,8 @@ def generate_launch_description():
 
     print(f"Using URDF file: {urdf_file}")
     print(f"Using RViz config: {rviz_config_file}")
+    print(f"Resolved RViz config path: {rviz_config_file}")
+    print("File exists?", os.path.exists(rviz_config_file))
 
     # Read URDF content safely
     with open(urdf_file, 'r') as infp:

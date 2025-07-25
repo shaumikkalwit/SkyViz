@@ -14,7 +14,38 @@ ClickedPointMarker::ClickedPointMarker()
     "undo_marker",
     std::bind(&ClickedPointMarker::handle_undo_request, this, std::placeholders::_1, std::placeholders::_2)
   );
+
+  get_point_service_ = this->create_service<std_srvs::srv::Trigger>(
+    "get_last_point",
+    [this](const std::shared_ptr<std_srvs::srv::Trigger::Request> req,
+          std::shared_ptr<std_srvs::srv::Trigger::Response> res)
+    {
+      if (has_point_) {
+        RCLCPP_INFO(this->get_logger(), "Service call: last point is ready");
+        res->success = true;
+        res->message = std::to_string(last_clicked_point_.point.x) + ", " +
+                      std::to_string(last_clicked_point_.point.y) + ", " +
+                      std::to_string(last_clicked_point_.point.z);
+      } else {
+        RCLCPP_WARN(this->get_logger(), "No point clicked yet.");
+        res->success = false;
+        res->message = "No point available";
+      }
+    }
+  );
+
 }
+
+bool ClickedPointMarker::has_last_point() const
+{
+  return has_point_;
+}
+
+geometry_msgs::msg::PointStamped ClickedPointMarker::get_last_point() const
+{
+  return last_clicked_point_;
+}
+
 
 void ClickedPointMarker::point_callback(const geometry_msgs::msg::PointStamped::SharedPtr msg)
 {
@@ -42,6 +73,9 @@ void ClickedPointMarker::point_callback(const geometry_msgs::msg::PointStamped::
   marker.frame_locked = true;
 
   marker.lifetime = rclcpp::Duration::from_seconds(0);  // 0 = forever
+  last_clicked_point_ = *msg;
+  has_point_ = true;
+
 
   marker_pub_->publish(marker);
 
