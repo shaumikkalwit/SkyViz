@@ -124,7 +124,7 @@ void MainPanel::onInitialize()
 
   // Get a pointer to the familiar rclcpp::Node for making subscriptions/publishers
   // (as per normal rclcpp code)gi
-  rclcpp::Node::SharedPtr node = node_ptr_->get_raw_node();
+  node = node_ptr_->get_raw_node();
   undo_client_ = node->create_client<std_srvs::srv::Trigger>("undo_marker");
 
   clicked_point_marker_node_ = std::make_shared<ClickedPointMarker>();
