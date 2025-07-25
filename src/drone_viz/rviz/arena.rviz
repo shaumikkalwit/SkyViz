@@ -6,7 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /RobotModel1
       Splitter Ratio: 0.5
     Tree Height: 251
   - Class: rviz_common/Selection
@@ -48,7 +47,7 @@ Visualization Manager:
         Z: 0
       Plane: XY
       Plane Cell Count: 10
-      Reference Frame: <Fixed Frame>
+      Reference Frame: base_link
       Value: true
     - Alpha: 1
       Class: rviz_default_plugins/RobotModel
@@ -85,25 +84,18 @@ Visualization Manager:
       Update Interval: 0
       Value: true
       Visual Enabled: true
-    - Class: rviz_default_plugins/TF
+    - Class: rviz_default_plugins/Marker
       Enabled: true
-      Frame Timeout: 15
-      Frames:
-        All Enabled: true
-        arena:
-          Value: true
-        base_link:
-          Value: true
-      Marker Scale: 1
-      Name: TF
-      Show Arrows: true
-      Show Axes: true
-      Show Names: false
-      Tree:
-        arena:
-          base_link:
-            {}
-      Update Interval: 0
+      Name: Marker
+      Namespaces:
+        {}
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /visualization_marker
       Value: true
   Enabled: true
   Global Options:
@@ -144,7 +136,6 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /clicked_point
-    - Class: drone_viz::WaypointTool
   Transformation:
     Current:
       Class: rviz_default_plugins/TF
@@ -167,10 +158,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.785398006439209
-      Target Frame: <Fixed Frame>
+      Pitch: 1.5697963237762451
+      Target Frame: base_link
       Value: Orbit (rviz)
-      Yaw: 0.785398006439209
+      Yaw: 0.010398568585515022
     Saved: ~
 Window Geometry:
   Displays:
@@ -190,5 +181,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 1046
-  Y: 177
+  X: 70
+  Y: 60

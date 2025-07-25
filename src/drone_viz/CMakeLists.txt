@@ -53,6 +53,12 @@ install(DIRECTORY include/
 install(DIRECTORY urdf
   DESTINATION share/${PROJECT_NAME}
 )
+
+install(
+  DIRECTORY rviz/
+  DESTINATION share/${PROJECT_NAME}/rviz
+)
+
 install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
 )
