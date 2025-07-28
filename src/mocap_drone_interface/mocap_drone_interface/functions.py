@@ -4,7 +4,7 @@ import csv
 import datetime
 import os
 #try:
-from mocap_drone_interface.library.NatNetClient import NatNetClient  # or whatever module you're using
+from library.NatNetClient import NatNetClient  # or whatever module you're using
 #except ImportError:
     #print("Please download the NatNet SDK and place the Python client in the proper directory.")
     #exit(1)

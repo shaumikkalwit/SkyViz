@@ -55,7 +55,7 @@ class MocapPublisherNode(Node):
             #msg.data = f"{new_id},{x:.3f},{y:.3f},{z:.3f},{qx:.3f},{qy:.3f},{qz:.3f},{qw:.3f}"
     
             self.counter += 1
-            msg.header.frame_id = 'map'
+            msg.header.frame_id = 'base_link'
             msg.header.stamp = self.get_clock().now().to_msg()
             msg.pose.position.x = x
             msg.pose.position.y = y
