@@ -1,0 +1,1 @@
+A system to track and control Crazyflie drones’ position and trajectories using a 12-camera motion capture system to interface the CrazyFlie API with ROS 2 and RViz, processing real-time motion capture data, to explore how to incorporate ground robots as charging stations.
