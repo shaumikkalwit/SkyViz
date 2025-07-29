@@ -1,37 +1,60 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration, Command
 from ament_index_python.packages import get_package_share_directory
 import os
 
 def generate_launch_description():
-    urdf_file = os.path.join(
-        get_package_share_directory('drone_viz'),
+    pkg_path = get_package_share_directory('drone_viz')
+
+    config_path = os.path.join(
+        pkg_path,
+        'config',
+        'drones.yaml'
+    )
+
+    urdf_xacro_file = os.path.join(
+        pkg_path,
         'urdf',
-        'drone_arena.urdf'
+        'drone_arena.xacro'
     )
 
     rviz_config_file = os.path.join(
-        get_package_share_directory('drone_viz'),
+        pkg_path,
         'rviz',
         'arena.rviz'
     )
 
-    print(f"Using URDF file: {urdf_file}")
-    print(f"Using RViz config: {rviz_config_file}")
-    print(f"Resolved RViz config path: {rviz_config_file}")
-    print("File exists?", os.path.exists(rviz_config_file))
+    # Declare launch argument for number of drones
+    num_drones_arg = DeclareLaunchArgument(
+        'num_drones',
+        default_value='1',
+        description='Number of drones to spawn'
+    )
 
-    # Read URDF content safely
-    with open(urdf_file, 'r') as infp:
-        robot_desc = infp.read()
+    # Command to process xacro with num_drones parameter
+    robot_description_cmd = Command([
+        'xacro ', urdf_xacro_file, ' num_drones:=', LaunchConfiguration('num_drones')
+    ])
 
     return LaunchDescription([
+        num_drones_arg,
+
         Node(
             package='robot_state_publisher',
             executable='robot_state_publisher',
             name='robot_state_publisher',
             output='screen',
-            parameters=[{'robot_description': robot_desc}]
+            parameters=[{'robot_description': robot_description_cmd}]
+        ),
+
+        Node(
+            package='drone_viz',
+            executable='drone_tf_broadcaster.py',
+            name='drone_tf_broadcaster',
+            output='screen',
+            parameters=[{'config_file': config_path}]
         ),
 
         Node(

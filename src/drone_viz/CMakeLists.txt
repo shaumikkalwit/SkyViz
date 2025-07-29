@@ -92,4 +92,11 @@ install(TARGETS clicked_point_marker
   DESTINATION lib/${PROJECT_NAME}
 )
 
+# Install Python node
+install(
+  PROGRAMS
+    scripts/drone_tf_broadcaster.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_package()

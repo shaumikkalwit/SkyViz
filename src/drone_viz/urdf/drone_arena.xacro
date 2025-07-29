@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="drone_arena">
+
+  <!-- Arena volume box (visual only) -->
+  <link name="arena">
+    <visual>
+      <geometry>
+        <box size="6.7056 5.4864 2.7432"/>
+      </geometry>
+      <material name="transparent">
+        <color rgba="0 0 1 0.1"/>
+      </material>
+    </visual>
+  </link>
+
+  <link name="base_link"/>
+
+  <joint name="base_to_arena" type="fixed">
+    <parent link="arena"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 -1.3716" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Drone macro -->
+  <xacro:macro name="drone" params="id">
+    <link name="drone_${id}">
+      <visual>
+        <geometry>
+          <mesh filename="package://drone_viz/meshes/crazyflie.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="gray">
+          <color rgba="0.5 0.5 0.5 1"/>
+        </material>
+      </visual>
+    </link>
+    <joint name="drone_${id}_tf_joint" type="floating">
+      <parent link="base_link"/>
+      <child link="drone_${id}"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:drone id="1"/>
+  <xacro:drone id="2"/>
+  <xacro:drone id="3"/>
+
+
+</robot>
