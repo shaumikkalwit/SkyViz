@@ -1,7 +1,3 @@
 drones:
   - id: drone_1
-    topic: /drone_1/pose
-  - id: drone_2
-    topic: /drone_2/pose
-  - id: drone_3
-    topic: /drone_3/pose
+    topic: /drone10/pose

@@ -8,32 +8,16 @@ import os
 def generate_launch_description():
     pkg_path = get_package_share_directory('drone_viz')
 
-    config_path = os.path.join(
-        pkg_path,
-        'config',
-        'drones.yaml'
-    )
+    config_path = os.path.join(pkg_path, 'config', 'drones.yaml')
+    urdf_xacro_file = os.path.join(pkg_path, 'urdf', 'drone_arena.xacro')
+    rviz_config_file = os.path.join(pkg_path, 'rviz', 'arena.rviz')
 
-    urdf_xacro_file = os.path.join(
-        pkg_path,
-        'urdf',
-        'drone_arena.xacro'
-    )
-
-    rviz_config_file = os.path.join(
-        pkg_path,
-        'rviz',
-        'arena.rviz'
-    )
-
-    # Declare launch argument for number of drones
     num_drones_arg = DeclareLaunchArgument(
         'num_drones',
         default_value='1',
         description='Number of drones to spawn'
     )
 
-    # Command to process xacro with num_drones parameter
     robot_description_cmd = Command([
         'xacro ', urdf_xacro_file, ' num_drones:=', LaunchConfiguration('num_drones')
     ])
@@ -42,19 +26,18 @@ def generate_launch_description():
         num_drones_arg,
 
         Node(
+            package='drone_viz',
+            executable='drone_tf_broadcaster.py',
+            name='drone_tf_broadcaster',
+            output='screen'
+        ),
+
+        Node(
             package='robot_state_publisher',
             executable='robot_state_publisher',
             name='robot_state_publisher',
             output='screen',
             parameters=[{'robot_description': robot_description_cmd}]
-        ),
-
-        Node(
-            package='drone_viz',
-            executable='drone_tf_broadcaster.py',
-            name='drone_tf_broadcaster',
-            output='screen',
-            parameters=[{'config_file': config_path}]
         ),
 
         Node(
