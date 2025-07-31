@@ -54,6 +54,10 @@ install(DIRECTORY urdf
   DESTINATION share/${PROJECT_NAME}
 )
 
+install(DIRECTORY meshes/
+  DESTINATION share/${PROJECT_NAME}/meshes
+)
+
 install(
   DIRECTORY rviz/
   DESTINATION share/${PROJECT_NAME}/rviz
@@ -89,6 +93,13 @@ target_include_directories(clicked_point_marker PUBLIC
 )
 
 install(TARGETS clicked_point_marker
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install Python node
+install(
+  PROGRAMS
+    scripts/drone_tf_broadcaster.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

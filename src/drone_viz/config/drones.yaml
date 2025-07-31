@@ -1,0 +1,3 @@
+drones:
+  - id: drone_1
+    topic: /drone10/pose

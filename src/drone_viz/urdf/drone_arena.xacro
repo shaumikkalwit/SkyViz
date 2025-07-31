@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
-<robot name="drone_arena">
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="drone_arena">
 
-  <!-- Arena volume box (visual only) -->
   <link name="arena">
     <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <box size="6.7056 5.4864 2.7432"/>
       </geometry>
@@ -13,14 +13,17 @@
     </visual>
   </link>
 
-  <!-- Dummy link representing drone starting point -->
-  <link name="base_link"/>
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://drone_viz/meshes/crazyflie.stl" scale="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+  </link>
 
-  <!-- Fixed joint to place base_link at center of arena -->
   <joint name="base_to_arena" type="fixed">
     <parent link="arena"/>
     <child link="base_link"/>
-    <origin xyz="0 0 -1.3716" rpy="0 0 0"/>
+    <origin xyz="0 0 -2.7432" rpy="0 0 0"/>
   </joint>
-
 </robot>
