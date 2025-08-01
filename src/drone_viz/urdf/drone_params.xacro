@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- Macro to define one drone instance -->
+  <xacro:macro name="drone_instance" params="name mesh">
+    <link name="${name}_base_link">
+      <visual>
+        <geometry>
+          <mesh filename="package://drone_viz/meshes/${mesh}"/>
+        </geometry>
+        <material name="gray">
+          <color rgba="1 0 0"/>
+        </material>
+      </visual>
+    </link>
+  </xacro:macro>
+
+</robot>
