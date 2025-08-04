@@ -13,15 +13,6 @@ def generate_launch_description():
     urdf_xacro_file = os.path.join(pkg_path, 'urdf', 'drone_arena.xacro')
     rviz_config_file = os.path.join(pkg_path, 'rviz', 'arena.rviz')
 
-    # num_drones_arg = DeclareLaunchArgument(
-    #     'num_drones',
-    #     default_value='1',
-    #     description='Number of drones to spawn'
-    # )
-
-    # robot_description_cmd = Command([
-    #     'xacro ', urdf_xacro_file, ' num_drones:=', LaunchConfiguration('num_drones')
-    # ])
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
 
@@ -32,17 +23,11 @@ def generate_launch_description():
         print("---")
 
 
+    urdf_xacro_file = os.path.join(pkg_path, 'urdf', 'drone_arena.xacro')
+    robot_description = Command(['xacro ', urdf_xacro_file])
+
+
     drones = config['drones']
-
-    # Convert drone list to xacro string argument
-    drones_arg = str(drones).replace("'", '"')  # Xacro needs double quotes
-
-    robot_description_cmd = Command([
-        'xacro', ' ',
-        urdf_xacro_file,
-        ' ',
-        'drones:=', f'"{drones_arg}"'
-    ])
 
     nodes = []
 
@@ -70,7 +55,7 @@ def generate_launch_description():
             name='robot_state_publisher',
             output='screen',
             parameters=[{
-                'robot_description': robot_description_cmd
+                'robot_description': robot_description
             }]
         )
     )

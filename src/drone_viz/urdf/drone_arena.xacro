@@ -45,5 +45,4 @@
     </joint>
   </xacro:macro>
 
-  <!-- <xacro:include filename="$(find drone_viz)/urdf/drone_params.xacro"/> -->
 </robot>
