@@ -27,10 +27,14 @@ class MocapPublisherNode(Node):
     def init(self):
         super().__init__('pose_publisher')
         self.publishers_ = {}
+        self.posepub_ = {}
+        
         
         for i in self.ids:
-            topic = f'/drone{i}/pose'
-            self.publishers_[i]  = self.create_publisher(PoseStamped, topic, 10)
+            topic1 = f'/drone{i}/posestamped'
+            self.publishers_[i]  = self.create_publisher(PoseStamped, topic1, 10)
+            topic2 = f'drone{i}/pose'
+            self.posepub_[i] = self.create_publisher(Pose, topic2, 10)
         self.client = NatNetClient()
         self.client.set_use_multicast(False)
         self.client.set_client_address(self.local_ip)
@@ -42,18 +46,28 @@ class MocapPublisherNode(Node):
         self.stop_event = threading.Event()
         self.main = threading.Thread(target=self.main_thread)
         self.main.start()
-        self.starttime = 0
+        
+        
         
 
     def rrbf(self, new_id, position, rotation):
+    
         if not rclpy.ok():
             return 
         if new_id in self.ids:
             msg=PoseStamped()
+            msg2 = Pose()
             x, y, z = position
             qx, qy, qz, qw = rotation
             #msg.data = f"{new_id},{x:.3f},{y:.3f},{z:.3f},{qx:.3f},{qy:.3f},{qz:.3f},{qw:.3f}"
-    
+            msg2.position.x = x
+            msg2.position.y = y
+            msg2.position.z = z
+            msg2.orientation.x = qx
+            msg2.orientation.y = qy
+            msg2.orientation.z = qz
+            msg2.orientation.w = qw
+
             self.counter += 1
             msg.header.frame_id = 'map'
             msg.header.stamp = self.get_clock().now().to_msg()
@@ -67,7 +81,9 @@ class MocapPublisherNode(Node):
     
             with self.lock:
                 self.publishers_[new_id].publish(msg)
-                self.get_logger().info('Publishing: "%s"' % msg)
+                self.posepub_[new_id].publish(msg2)
+                print(msg2)
+                
         
     def main_thread(self):
         while True:
@@ -76,6 +92,7 @@ class MocapPublisherNode(Node):
             time.sleep(1)
             if self.client.connected():
                 print("Connected to server")
+                print("Dtarting data feed")
                 break
             else:
                 print("Not connected")

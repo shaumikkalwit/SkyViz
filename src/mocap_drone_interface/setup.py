@@ -23,7 +23,8 @@ setup(
         'console_scripts': [
             'talker = mocap_drone_interface.ros2tests.testpub:main',
             'listener = mocap_drone_interface.ros2tests.testsub:main',
-            'posevis = mocap_drone_interface.ros2tests.rviz_mocap:main'
+            'posevis = mocap_drone_interface.ros2tests.rviz_mocap:main',
+            'service = mocap_drone_interface.library.flightclient:main'
             
         ],
     },
