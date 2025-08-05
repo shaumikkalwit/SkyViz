@@ -7,6 +7,13 @@
 #include <rviz_common/tool_manager.hpp>
 #include <rviz_common/tool.hpp>
 #include <drone_viz/clicked_point_marker.hpp>
+#include <drone_viz/flight_client_node.hpp>
+#include "drone_viz_interfaces/msg/command.hpp"
+#include "drone_viz_interfaces/srv/flight_service.hpp"
+#include <cstdlib>
+#include <memory>
+#include <chrono>
+
 
 // #include <rviz_common/ros_node_abstraction_iface.hpp>
 
@@ -26,9 +33,6 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
 
     QObject::connect(autonomous_button_, &QPushButton::released, this, &MainPanel::autonomousButtonActivated);
     QObject::connect(teleop_button_, &QPushButton::released, this, &MainPanel::teleopButtonActivated);
-
-    rclcpp::Node::SharedPtr node_;
-    rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr arm_client_;
 
     // Create the autonomous widget and its layout
     autonomous_widget_ = new QWidget();
@@ -62,9 +66,13 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
     teleop_layout->addWidget(teleop_takeoff_button);
     teleop_layout->addWidget(teleop_land_button);
 
-    // // --- Connect both arm buttons ---
-    // QObject::connect(autonomous_arm_button, &QPushButton::released, this, &MainPanel::armButtonPressed);
-    // QObject::connect(teleop_arm_button, &QPushButton::released, this, &MainPanel::armButtonPressed);
+     // --- Connect arm, takeoff and land buttons ---
+    QObject::connect(autonomous_arm_button, &QPushButton::released, this, &MainPanel::armButtonPressed);
+    QObject::connect(teleop_arm_button, &QPushButton::released, this, &MainPanel::armButtonPressed);
+    QObject::connect(teleop_takeoff_button, &QPushButton::released, this, &MainPanel::takeoffButtonPressed);
+    QObject::connect(autonomous_takeoff_button, &QPushButton::released, this, &MainPanel::landButtonPressed);
+    QObject::connect(teleop_land_button, &QPushButton::released, this, &MainPanel::landButtonPressed);
+    QObject::connect(autonomous_land_button, &QPushButton::released, this, &MainPanel::landButtonPressed);
 
     // Gamepad-style directional controls
     auto* direction_layout = new QGridLayout();
@@ -97,7 +105,7 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
         stacked_layout_->setCurrentWidget(main_widget_);
     });
 
-    QObject::connect(confirm_button, &QPushButton::released, this, &MainPanel::confirmButtonPressed);
+    QObject::connect(confirm_button, &QPushButton::released, this, &MainPanel::confirmWaypointButtonPressed);
 
     QObject::connect(undo_button, &QPushButton::released, this, &MainPanel::undoButtonPressed);
 
@@ -147,24 +155,78 @@ void MainPanel::onInitialize()
 // When the widget's button is pressed, this callback is triggered,
 // and then we publish a new message on our topic.
 void MainPanel::teleopButtonActivated()
-{
-    // auto message = std_msgs::msg::String();
-    // message.data = "Button clicked!";
-    // publisher_->publish(message);
-
+{  
+    absolutecommand = false;
     stacked_layout_->setCurrentWidget(teleop_widget_);
 }
 
 void MainPanel::autonomousButtonActivated()
 {
-    // auto message = std_msgs::msg::String();
-    // message.data = "Button clicked!";
-    // publisher_->publish(message);
-
+    absolutecommand = true;
     stacked_layout_->setCurrentWidget(autonomous_widget_);
 }
 
-void MainPanel::confirmButtonPressed()
+void MainPanel::armButtonPressed()
+{
+    message.absolute = absolutecommand;
+    message.comtype = 'a';
+    flightclient -> threadedRequest(message);
+    
+}
+
+void MainPanel::takeoffButtonPressed()
+{
+    message.comtype = 't';
+    flightclient -> threadedRequest(message);
+}
+
+void MainPanel::landButtonPressed()
+{
+    message.comtype = 'l';
+    flightclient -> threadedRequest(message);
+}
+
+void MainPanel::leftButtonPressed()
+{
+    message.comtype = 'm';
+    message.moveto.x = 0;
+    message.moveto.y = -increment;
+    message.moveto.z = 0;
+
+    flightclient -> threadedRequest(message);
+}
+
+void MainPanel::rightButtonPressed()
+{
+    message.comtype = 'm';
+    message.moveto.x = 0;
+    message.moveto.y = increment;
+    message.moveto.z = 0;
+
+    flightclient -> threadedRequest(message);
+}
+
+void MainPanel::forwardButtonPressed()
+{
+    message.comtype = 'm';
+    message.moveto.x = increment;
+    message.moveto.y = 0;
+    message.moveto.z = 0;
+
+    flightclient -> threadedRequest(message);
+}
+
+void MainPanel::backwardButtonPressed()
+{
+    message.comtype = 'm';
+    message.moveto.x = -increment;
+    message.moveto.y = 0;
+    message.moveto.z = 0;
+
+    flightclient -> threadedRequest(message);
+}
+
+void MainPanel::confirmWaypointButtonPressed()
 {
   auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
   auto client = node->create_client<std_srvs::srv::Trigger>("get_last_point");
@@ -180,6 +242,17 @@ void MainPanel::confirmButtonPressed()
       auto res = result.get();
       if (res->success) {
         RCLCPP_INFO(node->get_logger(), "Confirming point: %s", res->message.c_str());
+
+        geometry_msgs::msg::Point target;
+        std::stringstream ss(res->message);
+        ss >> target.x >> target.y >> target.z;
+
+        // Create and send the message
+        message.comtype = 'm';
+        message.moveto = target;
+
+        flightclient->threadedRequest(message);
+
       } else {
         RCLCPP_WARN(node->get_logger(), "No point clicked. Cannot confirm.");
       }

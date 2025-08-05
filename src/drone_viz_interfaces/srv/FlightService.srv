@@ -1,0 +1,4 @@
+drone_viz_interfaces/Command command_input
+---
+bool success
+string message
