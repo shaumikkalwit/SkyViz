@@ -51,7 +51,7 @@ void ClickedPointMarker::point_callback(const geometry_msgs::msg::PointStamped::
 {
   auto marker = visualization_msgs::msg::Marker();
 
-  marker.header.frame_id = "base_link";
+  marker.header.frame_id = "arena";
   marker.header.stamp = this->now();
   marker.ns = "clicked_points";
   marker.id = marker_id_++;
@@ -91,7 +91,7 @@ void ClickedPointMarker::undo_last_marker()
     marker_id_history_.pop_back();
 
     auto delete_marker = visualization_msgs::msg::Marker();
-    delete_marker.header.frame_id = "base_link";
+    delete_marker.header.frame_id = "arena";
     delete_marker.header.stamp = this->now();
     delete_marker.ns = "clicked_points";
     delete_marker.id = last_marker_id;
