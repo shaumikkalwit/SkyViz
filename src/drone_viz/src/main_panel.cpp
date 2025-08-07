@@ -70,7 +70,7 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
     QObject::connect(autonomous_arm_button, &QPushButton::released, this, &MainPanel::armButtonPressed);
     QObject::connect(teleop_arm_button, &QPushButton::released, this, &MainPanel::armButtonPressed);
     QObject::connect(teleop_takeoff_button, &QPushButton::released, this, &MainPanel::takeoffButtonPressed);
-    QObject::connect(autonomous_takeoff_button, &QPushButton::released, this, &MainPanel::landButtonPressed);
+    QObject::connect(autonomous_takeoff_button, &QPushButton::released, this, &MainPanel::takeoffButtonPressed);
     QObject::connect(teleop_land_button, &QPushButton::released, this, &MainPanel::landButtonPressed);
     QObject::connect(autonomous_land_button, &QPushButton::released, this, &MainPanel::landButtonPressed);
 

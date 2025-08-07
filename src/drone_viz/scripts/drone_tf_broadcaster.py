@@ -11,7 +11,7 @@ class DroneTFBroadcaster(Node):
         super().__init__('drone_tf_broadcaster')
 
         self.declare_parameter('drone_name', 'droneXX')
-        self.declare_parameter('pose_topic', '/droneXX/pose')
+        self.declare_parameter('pose_topic', '/droneXX/posestamped')
         self.declare_parameter('mesh', 'crazyflie.stl')  # default fallback
 
         self.drone_name = self.get_parameter('drone_name').get_parameter_value().string_value

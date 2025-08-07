@@ -20,6 +20,13 @@ from cflib.utils.reset_estimator import reset_estimator
 
 class MinFlightService(Node):
     def __init__(self, cf: Crazyflie):
+        self.x = 0.0
+        self.y = 0.0
+        self.z = 0.0
+        self.qx = 0.0
+        self.qy = 0.0
+        self.qz = 0.0
+        self.qw = 1.0
         self.runningstate = False
         super().__init__('minimal_flight_service')
         self.positionlock = threading.Lock()
@@ -31,6 +38,7 @@ class MinFlightService(Node):
         self.arm_state = False
         self.mc = self.cf.high_level_commander
         threading.Thread(target=self.pose_loop, daemon=True).start()
+        print("Thread started")
 
     def pose_loop(self):
         while rclpy.ok():
@@ -39,7 +47,7 @@ class MinFlightService(Node):
             self.cf.extpos.send_extpose(*pose)
             print(f"sent pose: {pose}")
             time.sleep(0.05)
-        
+
         
     def PoseCallback(self, msg:Pose):
         
@@ -59,6 +67,7 @@ class MinFlightService(Node):
             with self.statelock:
                 if not self.runningstate:
                     threading.Thread(target=self.arm_and_setup, args=(request, response)).start()
+                    self.get_logger().info("afhfhfhlkefefhehf")
                     response.success = True
                     response.message = "Arm request sent correctly"
                     return response
@@ -114,10 +123,12 @@ class MinFlightService(Node):
         self.cf.param.set_value('stabilizer.estimator', '2')  # Kalman
         time.sleep(0.1)
         
+        self.get_logger().info(" HERE DO YOU GET HERE??? Crazyflie")
         self.arm_state = True
         reset_estimator(self.cf)
         time.sleep(5)
-        
+        self.get_logger().info("DO YOU GET HERE??? Crazyflie")
+
         with self.statelock:
             self.runningstate = False
         print("drone armed and ready")
