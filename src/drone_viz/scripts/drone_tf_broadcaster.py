@@ -29,10 +29,10 @@ class DroneTFBroadcaster(Node):
         )
 
     def pose_callback(self, msg: PoseStamped):
-        self.get_logger().info(
-            f"Received pose for {self.drone_name}: "
-            f"{msg.pose.position.x:.2f}, {msg.pose.position.y:.2f}, {msg.pose.position.z:.2f}"
-        )
+        # self.get_logger().info(
+        #     f"Received pose for {self.drone_name}: "
+        #     f"{msg.pose.position.x:.2f}, {msg.pose.position.y:.2f}, {msg.pose.position.z:.2f}"
+        # )
         
         t = TransformStamped()
         t.header.stamp = msg.header.stamp

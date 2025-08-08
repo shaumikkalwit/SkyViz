@@ -45,7 +45,7 @@ class MinFlightService(Node):
             with self.positionlock:
                 pose = (self.x, self.y, self.z, self.qx, self.qy, self.qz, self.qw)
             self.cf.extpos.send_extpose(*pose)
-            print(f"sent pose: {pose}")
+            # print(f"sent pose: {pose}")
             time.sleep(0.05)
 
         
