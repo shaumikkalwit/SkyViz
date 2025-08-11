@@ -140,24 +140,8 @@ void MainPanel::onInitialize()
   get_point_client = node->create_client<std_srvs::srv::Trigger>("get_last_point");
 
   clicked_point_marker_node_ = std::make_shared<ClickedPointMarker>();
-
-
-  // // Create a String publisher for the output
-  // publisher_ = node->create_publisher<std_msgs::msg::String>("/output", 10);
-
-  // // Create a String subscription and bind it to the topicCallback inside this class.
-  // subscription_ = node->create_subscription<std_msgs::msg::String>("/input", 10, std::bind(&MainPanel::topicCallback, this, std::placeholders::_1));
 }
 
-// // When the subscriber gets a message, this callback is triggered,
-// // and then we copy its data into the widget's label
-// void MainPanel::topicCallback(const std_msgs::msg::String & msg)
-// {
-//   label_->setText(QString(msg.data.c_str()));
-// }
-
-// When the widget's button is pressed, this callback is triggered,
-// and then we publish a new message on our topic.
 void MainPanel::teleopButtonActivated()
 {  
     absolutecommand = false;
@@ -232,46 +216,6 @@ void MainPanel::backwardButtonPressed()
 
 void MainPanel::confirmWaypointButtonPressed()
 {
-  // //  client for the "get_last_point" service
-  // auto get_point_client = node->create_client<std_srvs::srv::Trigger>("get_last_point");
-
-  // // Check if the service is available
-  // if (!get_point_client->wait_for_service(std::chrono::seconds(1))) {
-  //   RCLCPP_ERROR(node->get_logger(), "Service 'get_last_point' not available. Is the clicked_point_marker node running?");
-  //   return;
-  // }
-
-  // // create the request and send it asynchronously
-  // auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-  // auto future_result = get_point_client->async_send_request(request,
-  //   // define the callback function that will run when the service responds
-  //   [this](rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future)
-  //   {
-  //     auto response = future.get();
-  //     if (response && response->success) {
-  //       RCLCPP_INFO(node->get_logger(), "Received point from service: %s", response->message.c_str());
-
-  //       geometry_msgs::msg::Point target_point;
-  //       std::stringstream ss(response->message);
-  //       char comma; // To consume the commas
-  //       ss >> target_point.x >> comma >> target_point.y >> comma >> target_point.z;
-
-  //       target_point.z = 1.0;
-
-  //       // command message for the drone.
-  //       message.comtype = "m"; // 'm' for moveto
-  //       message.moveto = target_point;
-  //       RCLCPP_INFO(node->get_logger(), "CHECK IF YOU GET HERE FOR USER WYAPOINT");
-  //       // message.absolute = false; 
-
-  //       // send the command to the flight client
-  //       flightclient->threadedRequest(message);
-  //       RCLCPP_INFO(node->get_logger(), "Waypoint command sent to flight client.");
-
-  //     } else {
-  //       RCLCPP_WARN(node->get_logger(), "Failed to get point: %s", response->message.c_str());
-  //     }
-  //   });
   if (!this->get_point_client->wait_for_service(std::chrono::seconds(1))) {
     RCLCPP_ERROR(node->get_logger(), "Service 'get_last_point' not available. Is the clicked_point_marker node running?");
     return;
@@ -279,21 +223,20 @@ void MainPanel::confirmWaypointButtonPressed()
 
   auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
   
-  // Use the member variable to send the request. Because the client is a member
-  // of the class, it will persist and be able to receive the response.
+  // recieves the response
   this->get_point_client->async_send_request(request,
     [this](rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future)
     {
-      // This whole section is the callback that runs when the response arrives.
+      // callback that runs when the response arrives
       auto response = future.get();
 
-      // Safely check if the response is valid and if the service call was successful.
+      // check if the response is valid and if the service call was successful.
       if (response && response->success) {
         RCLCPP_INFO(node->get_logger(), "Received point from service: %s", response->message.c_str());
 
         geometry_msgs::msg::Point target_point;
         
-        // Use a stringstream to parse the x,y,z coordinates from the response message string.
+        // Use a stringstream to parse the x,y,z coordinates from the response message string, not sure if you need to do this lol but did it
         std::stringstream ss(response->message);
         char comma; // Used to consume the commas in the string.
         ss >> target_point.x >> comma >> target_point.y >> comma >> target_point.z;
@@ -338,29 +281,6 @@ void MainPanel::undoButtonPressed()
     }
   );
 }
-
-
-// void MainPanel::armButtonPressed()
-// {
-//     if (!arm_client_ || !arm_client_->wait_for_service(std::chrono::seconds(1))) {
-//             RCLCPP_WARN(node->get_logger(), "Arm service not available");
-//             return;
-//         }
-
-//         auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
-//         request->data = true;
-
-//         auto future = arm_client_->async_send_request(request,
-//             [this](rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture result) {
-//                 auto response = result.get();
-//                 if (response->success) {
-//                     RCLCPP_INFO(node->get_logger(), "Drone armed: %s", response->message.c_str());
-//                 } else {
-//                     RCLCPP_WARN(node->get_logger(), "Failed to arm: %s", response->message.c_str());
-//                 }
-//             }
-//         );
-// }
 
 }  // namespace drone_viz
 

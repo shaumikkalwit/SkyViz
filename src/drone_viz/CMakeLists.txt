@@ -16,13 +16,11 @@ find_package(drone_viz_interfaces REQUIRED)
 set(CMAKE_AUTOMOC ON)
 qt5_wrap_cpp(MOC_FILES
   include/drone_viz/main_panel.hpp
-  include/drone_viz/waypoint_tool.hpp
 )
 
 add_library(${PROJECT_NAME} SHARED
   src/main_panel.cpp 
   src/clicked_point_marker.cpp
-  src/waypoint_tool.cpp
   ${MOC_FILES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC

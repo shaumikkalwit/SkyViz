@@ -2,8 +2,4 @@
   <class name="drone_viz::MainPanel" type="drone_viz::MainPanel" base_class_type="rviz_common::Panel">
     <description></description>
   </class>
-  
-  <class name="drone_viz::WaypointTool" type="drone_viz::WaypointTool" base_class_type="rviz_common::Tool">
-    <description>Waypoint Tool</description>
-  </class>
 </library>
