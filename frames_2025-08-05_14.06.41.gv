@@ -1,8 +1,0 @@
-digraph G {
-"arena" -> "drone11_base_link"[label=" Broadcaster: default_authority\nAverage rate: 50.203\nBuffer length: 5.0\nMost recent transform: 1754420801.100646\nOldest transform: 1754420796.100951\n"];
-"arena" -> "drone10_base_link"[label=" Broadcaster: default_authority\nAverage rate: 50.205\nBuffer length: 5.0\nMost recent transform: 1754420801.101213\nOldest transform: 1754420796.101683\n"];
-edge [style=invis];
- subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
-"Recorded at time: 1754420801.1042914"[ shape=plaintext ] ;
-}->"arena";
-}
