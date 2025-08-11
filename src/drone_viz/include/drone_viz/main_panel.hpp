@@ -57,6 +57,7 @@ protected:
 
 private:
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr undo_client_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr get_point_client;
 
 private Q_SLOTS:
   void confirmWaypointButtonPressed();
