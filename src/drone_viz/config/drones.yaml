@@ -1,3 +1,8 @@
 drones:
-  - id: drone_1
-    topic: /drone10/pose
+  - name: drone11
+    pose_topic: /drone11/posestamped
+    mesh: crazyflie.stl
+
+  # - name: drone10
+  #   pose_topic: /drone10/posestamped
+  #   mesh: crazyflie.stl

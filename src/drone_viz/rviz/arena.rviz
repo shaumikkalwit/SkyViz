@@ -72,10 +72,6 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
       Mass Properties:
         Inertia: false
         Mass: false
@@ -159,7 +155,7 @@ Visualization Manager:
       Name: Current View
       Near Clip Distance: 0.009999999776482582
       Pitch: 1.5697963237762451
-      Target Frame: base_link
+      Target Frame: arena
       Value: Orbit (rviz)
       Yaw: 0.010398568585515022
     Saved: ~

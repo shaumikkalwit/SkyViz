@@ -14,6 +14,8 @@
 
 #include <drone_viz/clicked_point_marker.hpp>
 
+#include <drone_viz/flight_client_node.hpp>
+
 
 namespace drone_viz
 {
@@ -28,11 +30,10 @@ public:
   void onInitialize() override;
 
 protected:
-  // std::shared_ptr<rviz_common::ros_integration::RosNodeAbstractionIface> node_ptr_;
-  // rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
-  // rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
-
-  // void topicCallback(const std_msgs::msg::String & msg);
+  bool absolutecommand;
+  drone_viz_interfaces::msg::Command message;
+  std::shared_ptr<FlightClientNode> flightclient = std::make_shared<FlightClientNode>();
+  double increment = 0.5;
 
   QLabel* label_;
   QPushButton* teleop_button_;
@@ -56,12 +57,19 @@ protected:
 
 private:
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr undo_client_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr get_point_client;
 
 private Q_SLOTS:
-  void confirmButtonPressed();
+  void confirmWaypointButtonPressed();
   void teleopButtonActivated();
   void autonomousButtonActivated();
   void armButtonPressed();
+  void takeoffButtonPressed();
+  void landButtonPressed();
+  void forwardButtonPressed();
+  void backwardButtonPressed();
+  void leftButtonPressed();
+  void rightButtonPressed();
   void undoButtonPressed();
 };
 }  // namespace drone_viz

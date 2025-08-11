@@ -11,6 +11,7 @@ find_package(pluginlib REQUIRED)
 find_package(rviz_common REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(visualization_msgs REQUIRED)
+find_package(drone_viz_interfaces REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
 qt5_wrap_cpp(MOC_FILES
@@ -37,6 +38,7 @@ ament_target_dependencies(${PROJECT_NAME}
   rviz_rendering
   geometry_msgs
   visualization_msgs
+  drone_viz_interfaces
 )
 
 target_link_libraries(${PROJECT_NAME} Qt5::Widgets)
@@ -63,6 +65,11 @@ install(
   DESTINATION share/${PROJECT_NAME}/rviz
 )
 
+install(
+  DIRECTORY config/
+  DESTINATION share/${PROJECT_NAME}/config
+)
+
 install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
 )
@@ -85,6 +92,7 @@ ament_target_dependencies(clicked_point_marker
   geometry_msgs
   visualization_msgs
   std_srvs
+  drone_viz_interfaces
 )
 
 target_include_directories(clicked_point_marker PUBLIC

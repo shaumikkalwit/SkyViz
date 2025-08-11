@@ -3,7 +3,7 @@
 
   <link name="arena">
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="0 0 1.3716" rpy="0 0 0"/>
       <geometry>
         <box size="6.7056 5.4864 2.7432"/>
       </geometry>
@@ -13,7 +13,7 @@
     </visual>
   </link>
 
-  <link name="base_link">
+  <!-- <link name="base_link">
     <visual>
       <geometry>
         <mesh filename="package://drone_viz/meshes/crazyflie.stl" scale="0.01 0.01 0.01"/>
@@ -25,5 +25,24 @@
     <parent link="arena"/>
     <child link="base_link"/>
     <origin xyz="0 0 -2.7432" rpy="0 0 0"/>
-  </joint>
+  </joint> -->
+  <xacro:macro name="drone_instance" params="name mesh">
+    <link name="${name}_base_link">
+      <visual>
+        <geometry>
+          <mesh filename="package://drone_viz/meshes/${mesh}" scale="0.1 0.1 0.1"/>
+        </geometry>
+        <material name="gray">
+          <color rgba="1 0 0"/>
+        </material>
+      </visual>
+    </link>
+
+    <joint name="${name}_joint" type="fixed">
+      <parent link="arena"/>
+      <child link="${name}_base_link"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+  </xacro:macro>
+
 </robot>

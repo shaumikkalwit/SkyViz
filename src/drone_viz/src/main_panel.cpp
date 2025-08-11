@@ -7,6 +7,15 @@
 #include <rviz_common/tool_manager.hpp>
 #include <rviz_common/tool.hpp>
 #include <drone_viz/clicked_point_marker.hpp>
+#include <drone_viz/flight_client_node.hpp>
+#include "drone_viz_interfaces/msg/command.hpp"
+#include "drone_viz_interfaces/srv/flight_service.hpp"
+#include <cstdlib>
+#include <memory>
+#include <chrono>
+#include <sstream> // Required for std::stringstream
+#include <geometry_msgs/msg/point.hpp> // Required for geometry_msgs::msg::Point
+
 
 // #include <rviz_common/ros_node_abstraction_iface.hpp>
 
@@ -26,9 +35,6 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
 
     QObject::connect(autonomous_button_, &QPushButton::released, this, &MainPanel::autonomousButtonActivated);
     QObject::connect(teleop_button_, &QPushButton::released, this, &MainPanel::teleopButtonActivated);
-
-    rclcpp::Node::SharedPtr node_;
-    rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr arm_client_;
 
     // Create the autonomous widget and its layout
     autonomous_widget_ = new QWidget();
@@ -62,9 +68,13 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
     teleop_layout->addWidget(teleop_takeoff_button);
     teleop_layout->addWidget(teleop_land_button);
 
-    // // --- Connect both arm buttons ---
-    // QObject::connect(autonomous_arm_button, &QPushButton::released, this, &MainPanel::armButtonPressed);
-    // QObject::connect(teleop_arm_button, &QPushButton::released, this, &MainPanel::armButtonPressed);
+     // --- Connect arm, takeoff and land buttons ---
+    QObject::connect(autonomous_arm_button, &QPushButton::released, this, &MainPanel::armButtonPressed);
+    QObject::connect(teleop_arm_button, &QPushButton::released, this, &MainPanel::armButtonPressed);
+    QObject::connect(teleop_takeoff_button, &QPushButton::released, this, &MainPanel::takeoffButtonPressed);
+    QObject::connect(autonomous_takeoff_button, &QPushButton::released, this, &MainPanel::takeoffButtonPressed);
+    QObject::connect(teleop_land_button, &QPushButton::released, this, &MainPanel::landButtonPressed);
+    QObject::connect(autonomous_land_button, &QPushButton::released, this, &MainPanel::landButtonPressed);
 
     // Gamepad-style directional controls
     auto* direction_layout = new QGridLayout();
@@ -97,7 +107,7 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
         stacked_layout_->setCurrentWidget(main_widget_);
     });
 
-    QObject::connect(confirm_button, &QPushButton::released, this, &MainPanel::confirmButtonPressed);
+    QObject::connect(confirm_button, &QPushButton::released, this, &MainPanel::confirmWaypointButtonPressed);
 
     QObject::connect(undo_button, &QPushButton::released, this, &MainPanel::undoButtonPressed);
 
@@ -127,6 +137,8 @@ void MainPanel::onInitialize()
   node = node_ptr_->get_raw_node();
   undo_client_ = node->create_client<std_srvs::srv::Trigger>("undo_marker");
 
+  get_point_client = node->create_client<std_srvs::srv::Trigger>("get_last_point");
+
   clicked_point_marker_node_ = std::make_shared<ClickedPointMarker>();
 
 
@@ -147,41 +159,160 @@ void MainPanel::onInitialize()
 // When the widget's button is pressed, this callback is triggered,
 // and then we publish a new message on our topic.
 void MainPanel::teleopButtonActivated()
-{
-    // auto message = std_msgs::msg::String();
-    // message.data = "Button clicked!";
-    // publisher_->publish(message);
-
+{  
+    absolutecommand = false;
     stacked_layout_->setCurrentWidget(teleop_widget_);
 }
 
 void MainPanel::autonomousButtonActivated()
 {
-    // auto message = std_msgs::msg::String();
-    // message.data = "Button clicked!";
-    // publisher_->publish(message);
-
+    absolutecommand = true;
     stacked_layout_->setCurrentWidget(autonomous_widget_);
 }
 
-void MainPanel::confirmButtonPressed()
+void MainPanel::armButtonPressed()
 {
-  auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-  auto client = node->create_client<std_srvs::srv::Trigger>("get_last_point");
+    message.absolute = absolutecommand;
+    message.comtype = 'a';
+    flightclient -> threadedRequest(message);
+    
+}
 
-  if (!client->wait_for_service(std::chrono::seconds(1))) {
-    RCLCPP_ERROR(node->get_logger(), "Service not available");
+void MainPanel::takeoffButtonPressed()
+{
+    message.comtype = 't';
+    flightclient -> threadedRequest(message);
+}
+
+void MainPanel::landButtonPressed()
+{
+    message.comtype = 'l';
+    flightclient -> threadedRequest(message);
+}
+
+void MainPanel::leftButtonPressed()
+{
+    message.comtype = 'm';
+    message.moveto.x = 0;
+    message.moveto.y = -increment;
+    message.moveto.z = 0;
+
+    flightclient -> threadedRequest(message);
+}
+
+void MainPanel::rightButtonPressed()
+{
+    message.comtype = 'm';
+    message.moveto.x = 0;
+    message.moveto.y = increment;
+    message.moveto.z = 0;
+
+    flightclient -> threadedRequest(message);
+}
+
+void MainPanel::forwardButtonPressed()
+{
+    message.comtype = 'm';
+    message.moveto.x = increment;
+    message.moveto.y = 0;
+    message.moveto.z = 0;
+
+    flightclient -> threadedRequest(message);
+}
+
+void MainPanel::backwardButtonPressed()
+{
+    message.comtype = 'm';
+    message.moveto.x = -increment;
+    message.moveto.y = 0;
+    message.moveto.z = 0;
+
+    flightclient -> threadedRequest(message);
+}
+
+void MainPanel::confirmWaypointButtonPressed()
+{
+  // //  client for the "get_last_point" service
+  // auto get_point_client = node->create_client<std_srvs::srv::Trigger>("get_last_point");
+
+  // // Check if the service is available
+  // if (!get_point_client->wait_for_service(std::chrono::seconds(1))) {
+  //   RCLCPP_ERROR(node->get_logger(), "Service 'get_last_point' not available. Is the clicked_point_marker node running?");
+  //   return;
+  // }
+
+  // // create the request and send it asynchronously
+  // auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+  // auto future_result = get_point_client->async_send_request(request,
+  //   // define the callback function that will run when the service responds
+  //   [this](rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future)
+  //   {
+  //     auto response = future.get();
+  //     if (response && response->success) {
+  //       RCLCPP_INFO(node->get_logger(), "Received point from service: %s", response->message.c_str());
+
+  //       geometry_msgs::msg::Point target_point;
+  //       std::stringstream ss(response->message);
+  //       char comma; // To consume the commas
+  //       ss >> target_point.x >> comma >> target_point.y >> comma >> target_point.z;
+
+  //       target_point.z = 1.0;
+
+  //       // command message for the drone.
+  //       message.comtype = "m"; // 'm' for moveto
+  //       message.moveto = target_point;
+  //       RCLCPP_INFO(node->get_logger(), "CHECK IF YOU GET HERE FOR USER WYAPOINT");
+  //       // message.absolute = false; 
+
+  //       // send the command to the flight client
+  //       flightclient->threadedRequest(message);
+  //       RCLCPP_INFO(node->get_logger(), "Waypoint command sent to flight client.");
+
+  //     } else {
+  //       RCLCPP_WARN(node->get_logger(), "Failed to get point: %s", response->message.c_str());
+  //     }
+  //   });
+  if (!this->get_point_client->wait_for_service(std::chrono::seconds(1))) {
+    RCLCPP_ERROR(node->get_logger(), "Service 'get_last_point' not available. Is the clicked_point_marker node running?");
     return;
   }
 
-  auto future = client->async_send_request(request,
-    [this](rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture result)
+  auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+  
+  // Use the member variable to send the request. Because the client is a member
+  // of the class, it will persist and be able to receive the response.
+  this->get_point_client->async_send_request(request,
+    [this](rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future)
     {
-      auto res = result.get();
-      if (res->success) {
-        RCLCPP_INFO(node->get_logger(), "Confirming point: %s", res->message.c_str());
+      // This whole section is the callback that runs when the response arrives.
+      auto response = future.get();
+
+      // Safely check if the response is valid and if the service call was successful.
+      if (response && response->success) {
+        RCLCPP_INFO(node->get_logger(), "Received point from service: %s", response->message.c_str());
+
+        geometry_msgs::msg::Point target_point;
+        
+        // Use a stringstream to parse the x,y,z coordinates from the response message string.
+        std::stringstream ss(response->message);
+        char comma; // Used to consume the commas in the string.
+        ss >> target_point.x >> comma >> target_point.y >> comma >> target_point.z;
+
+        // Optionally, override a coordinate like Z to set a fixed flight altitude.
+        target_point.z = 1.0;
+
+        // Prepare the command message for the drone.
+        message.comtype = 'm'; // 'm' for moveto
+        message.moveto = target_point;
+        // message.absolute = true; // Clicked points are absolute coordinates.
+
+        // Send the command to the flight client.
+        flightclient->threadedRequest(message);
+        RCLCPP_INFO(node->get_logger(), "Waypoint command sent to flight client.");
+
       } else {
-        RCLCPP_WARN(node->get_logger(), "No point clicked. Cannot confirm.");
+        // This block will run if the service call fails or returns success=false.
+        RCLCPP_WARN(node->get_logger(), "Failed to get point: %s", response ? response->message.c_str() : "Service call failed");
       }
     });
 }
