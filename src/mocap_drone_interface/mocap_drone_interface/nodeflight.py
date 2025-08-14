@@ -14,20 +14,22 @@ from cflib.utils.reset_estimator import reset_estimator
 from cflib.positioning.motion_commander import  MotionCommander
 import time
 import datetime
+from rclpy.parameter import ParameterType
+from rcl_interfaces.msg import ParameterDescriptor
 
 
 class MocapPublisherNode(Node):
-    def __init__(self, local_ip, server_ip, ids: list):
-        self.local_ip = local_ip
-        self.server_ip = server_ip
-        self.ids = set(ids)
-        
-        self.init()
-
-    def init(self):
+    def __init__(self):
         super().__init__('pose_publisher')
         self.publishers_ = {}
         self.posepub_ = {}
+
+        self.declare_parameter('data.localip', '127.0.0.1')
+        self.declare_parameter('data.serverip', '127.0.0.1')
+        self.declare_parameter('data.ids', [1, 2, 3])
+        self.local_ip = self.get_parameter('data.localip').get_parameter_value().string_value
+        self.server_ip = self.get_parameter('data.serverip').get_parameter_value().string_value
+        self.ids = set(self.get_parameter('data.ids').get_parameter_value().integer_array_value)
         
         
         for i in self.ids:
@@ -82,7 +84,7 @@ class MocapPublisherNode(Node):
             with self.lock:
                 self.publishers_[new_id].publish(msg)
                 self.posepub_[new_id].publish(msg2)
-                print(msg2)
+                
                 
         
     def main_thread(self):
@@ -91,8 +93,8 @@ class MocapPublisherNode(Node):
 
             time.sleep(1)
             if self.client.connected():
-                print("Connected to server")
-                print("Dtarting data feed")
+                print("Connected to server", flush=True)
+                print("Starting data feed", flush=True)
                 break
             else:
                 print("Not connected")
@@ -114,28 +116,25 @@ class MocapPublisherNode(Node):
         for t in threading.enumerate():
             print(f"- {t.name} (daemon={t.daemon})")
     
-class MocapCaller():
-    def __init__(self, local_ip, server_ip, ids):
-        rclpy.init()
-        publisher_ = MocapPublisherNode(local_ip, server_ip, ids)
-        try:
-            rclpy.spin(publisher_)
-        except KeyboardInterrupt:
-            print("KeyboardInterrupt received, shutting down...")
-        finally:
-            publisher_.stop_event.set()
-            
-            publisher_.client.shutdown()
-            
-            publisher_.destroy_node()
-            if rclpy.ok():
-                rclpy.shutdown()
 
-class ControlPublisher(Node):
-    def __init__(self, id):
-        self.id = id
-        name = f'drone{id}_controller'
-        super.__init__(name)
-        topic = f'drone{id}/control'
-        publisher_ = self.create_publisher(Point, topic, 10)
+def main(args=None):
+    rclpy.init()
 
+    publisher_ = MocapPublisherNode()
+    
+
+    try:
+        rclpy.spin(publisher_)
+    except KeyboardInterrupt:
+        print("KeyboardInterrupt received, shutting down...")
+    finally:
+        publisher_.stop_event.set()
+        
+        publisher_.client.shutdown()
+        
+        publisher_.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()

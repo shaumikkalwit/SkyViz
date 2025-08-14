@@ -1,4 +1,5 @@
 from setuptools import find_packages, setup
+import os
 
 package_name = 'mocap_drone_interface'
 
@@ -11,6 +12,8 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name, ['mocap_drone_interface/launch/mocap_launch.launch.py']),
+        ('share/' + package_name + '/config', ['mocap_drone_interface/config/params.yaml'])
     ],
     install_requires=['setuptools>=80.0.0'],
     zip_safe=True,
@@ -23,7 +26,7 @@ setup(
         'console_scripts': [
             'talker = mocap_drone_interface.ros2tests.testpub:main',
             'listener = mocap_drone_interface.ros2tests.testsub:main',
-            'posevis = mocap_drone_interface.rviz_mocap:main',
+            'posevis = mocap_drone_interface.nodeflight:main',
             'service = mocap_drone_interface.flightclient:main'
             
         ],

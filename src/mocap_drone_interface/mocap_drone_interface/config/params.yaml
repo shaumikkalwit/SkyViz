@@ -1,0 +1,15 @@
+/**:
+    ros__parameters:
+        data:
+            localip: "10.131.152.219"
+            serverip: "10.131.196.172"
+        drones:
+            drone1:
+                type: 'cf21'
+                id: 10
+                uri: 'E7E7E7E7E8'
+            drone2:
+                type: 'cf21bl'
+                id: 11
+                uri: 'E7E7E7E7E7'
+      

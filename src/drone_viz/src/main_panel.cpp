@@ -88,6 +88,11 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
     direction_layout->addWidget(right_button, 1, 2);    // Middle right
     direction_layout->addWidget(backward_button, 2, 1);     // Bottom center
 
+    QObject::connect(forward_button, &QPushButton::released, this, &MainPanel::forwardButtonPressed);
+    QObject::connect(left_button, &QPushButton::released, this, &MainPanel::leftButtonPressed);
+    QObject::connect(right_button, &QPushButton::released, this, &MainPanel::rightButtonPressed);
+    QObject::connect(backward_button, &QPushButton::released, this, &MainPanel::backwardButtonPressed);
+
     // Optional: Add a container widget to make it tidy
     QWidget* direction_widget = new QWidget();
     direction_widget->setLayout(direction_layout);
@@ -140,6 +145,7 @@ void MainPanel::onInitialize()
   get_point_client = node->create_client<std_srvs::srv::Trigger>("get_last_point");
 
   clicked_point_marker_node_ = std::make_shared<ClickedPointMarker>();
+  message.droneid = 10;
 }
 
 void MainPanel::teleopButtonActivated()
@@ -178,7 +184,7 @@ void MainPanel::leftButtonPressed()
 {
     message.comtype = 'm';
     message.moveto.x = 0;
-    message.moveto.y = -increment;
+    message.moveto.y = increment;
     message.moveto.z = 0;
 
     flightclient -> threadedRequest(message);
@@ -188,7 +194,7 @@ void MainPanel::rightButtonPressed()
 {
     message.comtype = 'm';
     message.moveto.x = 0;
-    message.moveto.y = increment;
+    message.moveto.y = -increment;
     message.moveto.z = 0;
 
     flightclient -> threadedRequest(message);
