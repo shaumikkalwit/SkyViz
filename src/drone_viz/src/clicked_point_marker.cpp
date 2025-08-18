@@ -1,5 +1,7 @@
 #include <drone_viz/clicked_point_marker.hpp>
 
+// stores points clicked 
+
 ClickedPointMarker::ClickedPointMarker()
 : Node("clicked_point_marker"), marker_id_(0)
 {

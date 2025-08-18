@@ -17,9 +17,9 @@ class FlightClientNode {
       
       std::shared_ptr<drone_viz_interfaces::srv::FlightService::Request> request_;
   public:
-      FlightClientNode() {
+      FlightClientNode(const std::string &service_name) {
           node_ =  rclcpp::Node::make_shared("flight_service_client");
-          client_ = node_ -> create_client<drone_viz_interfaces::srv::FlightService>("flight_service");
+          client_ = node_->create_client<drone_viz_interfaces::srv::FlightService>(service_name);
           request_ = std::make_shared<drone_viz_interfaces::srv::FlightService::Request>();
           thread_running_state = false;
       }

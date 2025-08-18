@@ -1,8 +1,21 @@
-drones:
-  - name: drone11
-    pose_topic: /drone11/posestamped
-    mesh: crazyflie.stl
-
-  # - name: drone10
-  #   pose_topic: /drone10/posestamped
-  #   mesh: crazyflie.stl
+rviz2:
+  ros__parameters:
+    drones:
+      names: ["drone11", "drone10"]
+      drone11:
+        pose_topic: /drone11/posestamped
+        flight_service: /drone11/flight_service 
+        mesh: "crazyflie.stl"
+      drone10:
+        pose_topic: /drone10/posestamped
+        flight_service: /drone10/flight_service
+        mesh: "crazyflie.stl"
+    clicked_point_marker:
+      frame_id: "arena"
+      marker_scale: 0.05
+      # Default color for markers
+      default_color:
+        r: 1.0
+        g: 0.0
+        b: 0.0
+        a: 1.0

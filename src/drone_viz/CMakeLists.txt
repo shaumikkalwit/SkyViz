@@ -21,6 +21,8 @@ qt5_wrap_cpp(MOC_FILES
 add_library(${PROJECT_NAME} SHARED
   src/main_panel.cpp 
   src/clicked_point_marker.cpp
+  src/drone.cpp
+  src/drone_control_widget.cpp
   ${MOC_FILES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC

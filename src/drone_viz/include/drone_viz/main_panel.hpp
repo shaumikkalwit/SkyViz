@@ -8,6 +8,8 @@
 #include <QPushButton>
 #include <QStackedLayout> // Qt layout manager that stacks multiple widgets on top of each other, but shows only one at a time
 #include <QWidget>
+#include <QTabWidget>
+
 
 #include <rclcpp/rclcpp.hpp>
 #include <std_srvs/srv/set_bool.hpp>
@@ -51,7 +53,7 @@ protected:
 
   // ROS 2 Node interface
   std::shared_ptr<rviz_common::ros_integration::RosNodeAbstractionIface> node_ptr_;
-  rclcpp::Node::SharedPtr node;
+  rclcpp::Node::SharedPtr node_;
 
   std::shared_ptr<ClickedPointMarker> clicked_point_marker_node_;
 
@@ -59,7 +61,12 @@ private:
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr undo_client_;
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr get_point_client;
 
+  QTabWidget* tab_widget_;
+  std::string current_drone_name_;
+
 private Q_SLOTS:
+  void onTabChanged(int index);
+
   void confirmWaypointButtonPressed();
   void teleopButtonActivated();
   void autonomousButtonActivated();

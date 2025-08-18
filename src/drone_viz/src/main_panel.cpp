@@ -7,6 +7,7 @@
 #include <rviz_common/tool_manager.hpp>
 #include <rviz_common/tool.hpp>
 #include <drone_viz/clicked_point_marker.hpp>
+#include <drone_viz/drone_control_widget.hpp>
 #include <drone_viz/flight_client_node.hpp>
 #include "drone_viz_interfaces/msg/command.hpp"
 #include "drone_viz_interfaces/srv/flight_service.hpp"
@@ -15,18 +16,26 @@
 #include <chrono>
 #include <sstream> // Required for std::stringstream
 #include <geometry_msgs/msg/point.hpp> // Required for geometry_msgs::msg::Point
-
+#include <yaml-cpp/yaml.h>
 
 // #include <rviz_common/ros_node_abstraction_iface.hpp>
 
 
-namespace  drone_viz
+namespace drone_viz
 {
 MainPanel::MainPanel(QWidget* parent) : Panel(parent)
 {
     main_widget_ = new QWidget();
     auto* main_layout = new QVBoxLayout(main_widget_);  // layout for main_widget_
-    label_ = new QLabel("[no data]");
+    label_ = new QLabel("Control Panel");
+    // Create the main tab widget and set it as the panel's layout
+    tab_widget_ = new QTabWidget(this);
+    setLayout(new QVBoxLayout());
+    layout()->addWidget(tab_widget_);
+    
+    // Connect the signal that fires when the user clicks a tab
+    connect(tab_widget_, &QTabWidget::currentChanged, this, &MainPanel::onTabChanged);
+
     autonomous_button_ = new QPushButton("Autonomous Control");
     teleop_button_ = new QPushButton("Teleoperation Control");
     main_layout->addWidget(label_);
@@ -126,20 +135,71 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
 
 MainPanel::~MainPanel() = default;
 
+// void MainPanel::onInitialize()
+// {
+//   // Access the abstract ROS Node and
+//   // in the process lock it for exclusive use until the method is done.
+//   node_ptr_ = getDisplayContext()->getRosNodeAbstraction().lock();
+
+//   // Get a pointer to the familiar rclcpp::Node for making subscriptions/publishers
+//   // (as per normal rclcpp code)
+//   node = node_ptr_->get_raw_node();
+//   undo_client_ = node->create_client<std_srvs::srv::Trigger>("undo_marker");
+
+//   get_point_client = node->create_client<std_srvs::srv::Trigger>("get_last_point");
+
+//   clicked_point_marker_node_ = std::make_shared<ClickedPointMarker>();
+
+//   try {
+//     YAML::Node config = YAML::LoadFile("../config/drones.yaml");
+
+//     std::string name = config["name"].as<std::string>();
+//   }
+// }
 void MainPanel::onInitialize()
 {
-  // Access the abstract ROS Node and
-  // in the process lock it for exclusive use until the method is done.
-  node_ptr_ = getDisplayContext()->getRosNodeAbstraction().lock();
+    node_ptr_ = getDisplayContext()->getRosNodeAbstraction().lock();
 
-  // Get a pointer to the familiar rclcpp::Node for making subscriptions/publishers
-  // (as per normal rclcpp code)gi
-  node = node_ptr_->get_raw_node();
-  undo_client_ = node->create_client<std_srvs::srv::Trigger>("undo_marker");
+    // Get a pointer to the familiar rclcpp::Node for making subscriptions/publishers
+    // (as per normal rclcpp code)
+    node_ = node_ptr_->get_raw_node();
 
-  get_point_client = node->create_client<std_srvs::srv::Trigger>("get_last_point");
+    // Discover all drones defined in the YAML file
+    auto param_list = node_->list_parameters({"drones"}, 1);
+    std::set<std::string> processed_ids;
 
-  clicked_point_marker_node_ = std::make_shared<ClickedPointMarker>();
+    for (const auto &param_name : param_list.names) {
+        // The parameter name is "drones.11.pose_topic", so we extract "11"
+        auto id_start = param_name.find('.') + 1;
+        auto id_end = param_name.find('.', id_start);
+        std::string drone_id_str = param_name.substr(id_start, id_end - id_start);
+        
+        // Use a set to create a tab for each unique ID only once
+        if (processed_ids.find(drone_id_str) == processed_ids.end()) {
+            std::string drone_name = "drone" + drone_id_str;
+            RCLCPP_INFO(node_->get_logger(), "Found drone: %s. Creating tab.", drone_name.c_str());
+
+            // Create an instance of our control widget
+            auto* control_widget = new DroneControlWidget(this);
+            // Add the widget as a new tab
+            tab_widget_->addTab(control_widget, QString::fromStdString(drone_name));
+            
+            processed_ids.insert(drone_id_str);
+        }
+    }
+
+    // Set the initial active drone name
+    if (tab_widget_->count() > 0) {
+        onTabChanged(0); // Call this to set the initial name and log it
+    }
+}
+
+void MainPanel::onTabChanged(int index)
+{
+    if (index >= 0) {
+        current_drone_name_ = tab_widget_->tabText(index).toStdString();
+        RCLCPP_INFO(node_->get_logger(), "Switched control to: %s", current_drone_name_.c_str());
+    }
 }
 
 void MainPanel::teleopButtonActivated()
@@ -214,73 +274,73 @@ void MainPanel::backwardButtonPressed()
     flightclient -> threadedRequest(message);
 }
 
-void MainPanel::confirmWaypointButtonPressed()
-{
-  if (!this->get_point_client->wait_for_service(std::chrono::seconds(1))) {
-    RCLCPP_ERROR(node->get_logger(), "Service 'get_last_point' not available. Is the clicked_point_marker node running?");
-    return;
-  }
+// void MainPanel::confirmWaypointButtonPressed()
+// {
+//   if (!this->get_point_client->wait_for_service(std::chrono::seconds(1))) {
+//     RCLCPP_ERROR(node->get_logger(), "Service 'get_last_point' not available. Is the clicked_point_marker node running?");
+//     return;
+//   }
 
-  auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+//   auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
   
-  // recieves the response
-  this->get_point_client->async_send_request(request,
-    [this](rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future)
-    {
-      // callback that runs when the response arrives
-      auto response = future.get();
+//   // recieves the response
+//   this->get_point_client->async_send_request(request,
+//     [this](rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future)
+//     {
+//       // callback that runs when the response arrives
+//       auto response = future.get();
 
-      // check if the response is valid and if the service call was successful.
-      if (response && response->success) {
-        RCLCPP_INFO(node->get_logger(), "Received point from service: %s", response->message.c_str());
+//       // check if the response is valid and if the service call was successful.
+//       if (response && response->success) {
+//         RCLCPP_INFO(node->get_logger(), "Received point from service: %s", response->message.c_str());
 
-        geometry_msgs::msg::Point target_point;
+//         geometry_msgs::msg::Point target_point;
         
-        // Use a stringstream to parse the x,y,z coordinates from the response message string, not sure if you need to do this lol but did it
-        std::stringstream ss(response->message);
-        char comma; // Used to consume the commas in the string.
-        ss >> target_point.x >> comma >> target_point.y >> comma >> target_point.z;
+//         // Use a stringstream to parse the x,y,z coordinates from the response message string, not sure if you need to do this lol but did it
+//         std::stringstream ss(response->message);
+//         char comma; // Used to consume the commas in the string.
+//         ss >> target_point.x >> comma >> target_point.y >> comma >> target_point.z;
 
-        // Optionally, override a coordinate like Z to set a fixed flight altitude.
-        target_point.z = 1.0;
+//         // Optionally, override a coordinate like Z to set a fixed flight altitude.
+//         target_point.z = 1.0;
 
-        // Prepare the command message for the drone.
-        message.comtype = 'm'; // 'm' for moveto
-        message.moveto = target_point;
-        // message.absolute = true; // Clicked points are absolute coordinates.
+//         // Prepare the command message for the drone.
+//         message.comtype = 'm'; // 'm' for moveto
+//         message.moveto = target_point;
+//         // message.absolute = true; // Clicked points are absolute coordinates.
 
-        // Send the command to the flight client.
-        flightclient->threadedRequest(message);
-        RCLCPP_INFO(node->get_logger(), "Waypoint command sent to flight client.");
+//         // Send the command to the flight client.
+//         flightclient->threadedRequest(message);
+//         RCLCPP_INFO(node->get_logger(), "Waypoint command sent to flight client.");
 
-      } else {
-        // This block will run if the service call fails or returns success=false.
-        RCLCPP_WARN(node->get_logger(), "Failed to get point: %s", response ? response->message.c_str() : "Service call failed");
-      }
-    });
-}
+//       } else {
+//         // This block will run if the service call fails or returns success=false.
+//         RCLCPP_WARN(node->get_logger(), "Failed to get point: %s", response ? response->message.c_str() : "Service call failed");
+//       }
+//     });
+// }
 
 
-void MainPanel::undoButtonPressed()
-{
-  if (!undo_client_ || !undo_client_->wait_for_service(std::chrono::seconds(1))) {
-    RCLCPP_WARN(node_ptr_->get_raw_node()->get_logger(), "Undo service not available");
-    return;
-  }
+// void MainPanel::undoButtonPressed()
+// {
+//   if (!undo_client_ || !undo_client_->wait_for_service(std::chrono::seconds(1))) {
+//     RCLCPP_WARN(node_ptr_->get_raw_node()->get_logger(), "Undo service not available");
+//     return;
+//   }
 
-  auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+//   auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
 
-  auto future = undo_client_->async_send_request(request,
-    [this](rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture result) {
-      auto response = result.get();
-      if (response->success) {
-        RCLCPP_INFO(node_ptr_->get_raw_node()->get_logger(), "Undo successful: %s", response->message.c_str());
-      } else {
-        RCLCPP_WARN(node_ptr_->get_raw_node()->get_logger(), "Undo failed: %s", response->message.c_str());
-      }
-    }
-  );
-}
+//   auto future = undo_client_->async_send_request(request,
+//     [this](rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture result) {
+//       auto response = result.get();
+//       if (response->success) {
+//         RCLCPP_INFO(node_ptr_->get_raw_node()->get_logger(), "Undo successful: %s", response->message.c_str());
+//       } else {
+//         RCLCPP_WARN(node_ptr_->get_raw_node()->get_logger(), "Undo failed: %s", response->message.c_str());
+//       }
+//     }
+//   );
+// }
 
 }  // namespace drone_viz
 
