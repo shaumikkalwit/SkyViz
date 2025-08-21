@@ -24,9 +24,9 @@ class MocapPublisherNode(Node):
         self.publishers_ = {}
         self.posepub_ = {}
 
-        self.declare_parameter('data.localip', '127.0.0.1')
-        self.declare_parameter('data.serverip', '127.0.0.1')
-        self.declare_parameter('data.ids', [1, 2, 3])
+        self.declare_parameter('data.localip', "10.131.152.219")
+        self.declare_parameter('data.serverip', '10.131.196.172')
+        self.declare_parameter('data.ids', [10, 11, 3])
         self.local_ip = self.get_parameter('data.localip').get_parameter_value().string_value
         self.server_ip = self.get_parameter('data.serverip').get_parameter_value().string_value
         self.ids = set(self.get_parameter('data.ids').get_parameter_value().integer_array_value)
@@ -53,7 +53,7 @@ class MocapPublisherNode(Node):
         
 
     def rrbf(self, new_id, position, rotation):
-    
+        print(new_id)
         if not rclpy.ok():
             return 
         if new_id in self.ids:

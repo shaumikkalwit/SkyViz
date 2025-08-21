@@ -15,6 +15,8 @@
 #include <chrono>
 #include <sstream> // Required for std::stringstream
 #include <geometry_msgs/msg/point.hpp> // Required for geometry_msgs::msg::Point
+#include <yaml-cpp/yaml.h>
+#include "ament_index_cpp/get_package_share_directory.hpp"
 
 
 // #include <rviz_common/ros_node_abstraction_iface.hpp>
@@ -24,14 +26,51 @@ namespace  drone_viz
 {
 MainPanel::MainPanel(QWidget* parent) : Panel(parent)
 {
+    std::string package_path = ament_index_cpp::get_package_share_directory("mocap_drone_interface");
+    std::string yaml_path = package_path + "/config/params.yaml";
+    YAML::Node config = YAML::LoadFile(yaml_path);
+
+    YAML::Node drones = config["/**"]["ros__parameters"]["drones"];
+
+    drone_select_widget_ = new QWidget();
+    auto* drone_select_layout = new QVBoxLayout(drone_select_widget_);
+
+    for (auto it = drones.begin(); it != drones.end(); ++it) {
+      std::string droneName = it -> first.as<std::string>();
+      YAML::Node drone = it->second;
+
+      std::string type = drone["type"].as<std::string>();
+      int id = drone["id"].as<int>();
+      std::string uri = drone["uri"].as<std::string>();
+      
+      std::string buttonname = "Drone" + std::to_string(id);
+      QPushButton *button = new QPushButton(QString::fromStdString(buttonname));
+
+      drone_select_layout -> addWidget(button);
+
+      QObject::connect(button, &QPushButton::released, [this, droneName, id, uri]() {
+        this->message.droneid = id;
+        std::string debugstring = "Selected drone " + std::to_string(id) + " for commands.";
+        RCLCPP_INFO(node-> get_logger(), debugstring.c_str());
+        stacked_layout_ -> setCurrentWidget(main_widget_);
+      });
+
+    }
+    
+    
     main_widget_ = new QWidget();
     auto* main_layout = new QVBoxLayout(main_widget_);  // layout for main_widget_
     label_ = new QLabel("[no data]");
     autonomous_button_ = new QPushButton("Autonomous Control");
     teleop_button_ = new QPushButton("Teleoperation Control");
+    
     main_layout->addWidget(label_);
     main_layout->addWidget(autonomous_button_);
     main_layout->addWidget(teleop_button_);
+
+   
+
+   
 
     QObject::connect(autonomous_button_, &QPushButton::released, this, &MainPanel::autonomousButtonActivated);
     QObject::connect(teleop_button_, &QPushButton::released, this, &MainPanel::teleopButtonActivated);
@@ -112,12 +151,20 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
         stacked_layout_->setCurrentWidget(main_widget_);
     });
 
+     // Main panel back button
+    QPushButton* main_panel_back_button = new QPushButton("Back");
+    main_layout->addWidget(main_panel_back_button);
+    QObject::connect(main_panel_back_button, &QPushButton::released, [this]() {
+        stacked_layout_->setCurrentWidget(drone_select_widget_);
+    });
+
     QObject::connect(confirm_button, &QPushButton::released, this, &MainPanel::confirmWaypointButtonPressed);
 
     QObject::connect(undo_button, &QPushButton::released, this, &MainPanel::undoButtonPressed);
 
     // Create the stacked layout and add the two widgets
     stacked_layout_ = new QStackedLayout(this);  // Set this as parent
+    stacked_layout_-> addWidget(drone_select_widget_);
     stacked_layout_->addWidget(main_widget_);
     stacked_layout_->addWidget(teleop_widget_);
     stacked_layout_->addWidget(autonomous_widget_);
@@ -126,7 +173,7 @@ MainPanel::MainPanel(QWidget* parent) : Panel(parent)
     setLayout(stacked_layout_);
 
     // Show the main widget by default
-    stacked_layout_->setCurrentWidget(main_widget_);
+    stacked_layout_->setCurrentWidget(drone_select_widget_);
 }
 
 MainPanel::~MainPanel() = default;
@@ -145,7 +192,7 @@ void MainPanel::onInitialize()
   get_point_client = node->create_client<std_srvs::srv::Trigger>("get_last_point");
 
   clicked_point_marker_node_ = std::make_shared<ClickedPointMarker>();
-  message.droneid = 10;
+  message.droneid = 11;
 }
 
 void MainPanel::teleopButtonActivated()

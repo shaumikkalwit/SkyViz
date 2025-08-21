@@ -240,12 +240,13 @@ class MultiDroneFlightService(Node):
         self.server_ip = self.get_parameter('data.serverip').get_parameter_value().string_value
         pkg_path = get_package_share_directory('mocap_drone_interface')
         yaml_file = os.path.join(pkg_path, 'config', 'params.yaml')
+  
         
         with open(yaml_file, 'r') as f:
             config = yaml.safe_load(f)
 
         drones: dict = config['/**']['ros__parameters']['drones']
-        print(drones)
+
         self.ids = []
 
         self.uris = []
@@ -264,6 +265,9 @@ class MultiDroneFlightService(Node):
         self.client.set_use_multicast(False)
         self.client.set_client_address(self.local_ip)
         self.client.set_server_address(self.server_ip)
+
+
+
         self.client.rigid_body_listener = self.rrbf
         self.client.set_print_level(0)
         self.lock = threading.Lock()
@@ -283,15 +287,12 @@ class MultiDroneFlightService(Node):
         self.controllers: Dict[int, DroneController] = {}
         for name, attrs in drones.items():
             drone_id = int(attrs['id'])
-            print(drone_id)
             self.controllers[drone_id] = DroneController(
                 drone_id,
                 uri=attrs['uri']
                 )
             self.ids.append(drone_id)
-        print(self.ids, flush=True)
-        print(f"Created {len(self.controllers)} drone objects.", flush=True)
-        print(self.controllers)
+        
 
         # create publishers for each drone passed in IDS
 
@@ -300,17 +301,15 @@ class MultiDroneFlightService(Node):
         for id in self.ids:
             topicname = f'/drone{id}/posestamped'
             self.publishers_[id] = self.create_publisher(PoseStamped, topicname, 10)
-            print(id)
-        print(self.publishers_)
 
         self.mocap = threading.Thread(target=self.mocap_functionality)
         self.mocap.start()
-        print("mocap thread started", flush=True)
+        
             
         
 
     def rrbf(self, new_id, position, rotation):
-        print(f"Publishing pose for drone {new_id}", flush=True)
+      
         if new_id in self.ids:
             
             if new_id not in self.controllers:
@@ -333,7 +332,7 @@ class MultiDroneFlightService(Node):
 
             time.sleep(1)
             if self.client.connected():
-                print("Connected to server")
+                print("Connected to server", flush=True)
                 break
             else:
                 print("Not connected")
@@ -446,9 +445,12 @@ class DroneController():
     
     def moveto(self, point: Point, abs: bool):
         if abs:
-            self.hlc.go_to(point.x, point.y, point.z, 0, 3, False)
+            self.hlc.go_to(point.x, point.y, point.z, 0, 1, False)
+            
         else: 
-            self.hlc.go_to(point.x, point.y, point.z, 0, 3, True)
+            self.hlc.go_to(point.x, point.y, point.z, 0, 1, True)
+
+        time.sleep(1)
         
 
     def shutdown(self):
@@ -464,7 +466,7 @@ def main():
     rclpy.init()
     cflib.crtp.init_drivers()
     mdfs = MultiDroneFlightService()
-    
+
     
 
     try:

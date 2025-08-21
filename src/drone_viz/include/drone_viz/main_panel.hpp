@@ -8,6 +8,7 @@
 #include <QPushButton>
 #include <QStackedLayout> // Qt layout manager that stacks multiple widgets on top of each other, but shows only one at a time
 #include <QWidget>
+#include <vector>
 
 #include <rclcpp/rclcpp.hpp>
 #include <std_srvs/srv/set_bool.hpp>
@@ -34,12 +35,15 @@ protected:
   drone_viz_interfaces::msg::Command message;
   std::shared_ptr<FlightClientNode> flightclient = std::make_shared<FlightClientNode>();
   double increment = 0.5;
+  std::vector<QPushButton> drone_select_vector;
+  
 
   QLabel* label_;
   QPushButton* teleop_button_;
   QPushButton* autonomous_button_;
 
   QStackedLayout* stacked_layout_;
+  QWidget* drone_select_widget_;
   QWidget* main_widget_;
   QWidget* teleop_widget_;
   QWidget* autonomous_widget_;
